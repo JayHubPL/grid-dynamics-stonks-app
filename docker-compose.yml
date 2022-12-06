@@ -1,4 +1,12 @@
 version: "3"
+
+networks:
+  stonks-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.100.0/24"
+
 services:
   db:
     container_name: stonks-db
@@ -8,7 +16,10 @@ services:
     networks:
       stonks-net:
         ipv4_address: 192.168.100.10
+
   app:
+    depends_on:
+      - db
     container_name: stonks-app
     build:
       context: .
@@ -18,9 +29,3 @@ services:
         ipv4_address: 192.168.100.11
     ports:
       - "8080:8080"
-networks:
-  stonks-net:
-    ipam:
-      driver: default
-      config:
-        - subnet: "192.168.100.0/24"
