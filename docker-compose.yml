@@ -1,0 +1,16 @@
+version: "3"
+services:
+  db:
+    container_name: stonks-db
+    build:
+      context: .
+      dockerfile: Dockerfile-db
+    ports:
+      - "5432:5432"
+  app:
+    container_name: stonks-app
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+    ports:
+      - "8080:8080"
