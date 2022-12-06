@@ -5,12 +5,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-db
-    ports:
-      - "5432:5432"
+    networks:
+      stonks-net:
+        ipv4_address: 192.168.100.10
   app:
     container_name: stonks-app
     build:
       context: .
       dockerfile: Dockerfile-app
+    networks:
+      stonks-net:
+        ipv4_address: 192.168.100.11
     ports:
       - "8080:8080"
+networks:
+  stonks-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.100.0/24"
