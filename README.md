@@ -24,4 +24,22 @@
 10. **(OPTIONAL)** Stock price caching
 
 ## Running the application
-**TODO**
+### Requirements
+> docker, docker-compose, some java 17 jdk, gradle (optional)
+### Run
+1. Build the project jar
+```sh
+gradle clean bootJar
+```
+Or use the wrapper if you don't have gradle installed:
+```sh
+./gradlew clean bootJar
+```
+2. Run the app
+```sh
+docker-compose up -d
+```
+### Stop
+```sh
+docker-compose down
+```
