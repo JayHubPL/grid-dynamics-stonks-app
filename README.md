@@ -25,21 +25,17 @@
 
 ## Running the application
 ### Requirements
-> docker, docker-compose, some java 17 jdk, gradle (optional)
+> docker, docker-compose
 ### Run
-1. Build the project jar
-```sh
-gradle clean bootJar
+1. Start the application
+```shell
+make start
 ```
-Or use the wrapper if you don't have gradle installed:
-```sh
-./gradlew clean bootJar
+2. Stop the application
+```shell
+make stop
 ```
-2. Run the app
-```sh
-docker-compose up -d
-```
-### Stop
-```sh
-docker-compose down
+3. Clean up the docker images
+```shell
+make clean
 ```
