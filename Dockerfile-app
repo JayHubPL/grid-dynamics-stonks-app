@@ -1,3 +1,0 @@
-FROM openjdk:17
-COPY build/libs/stonks-jh-1.0-SNAPSHOT.jar .
-ENTRYPOINT ["java", "-jar", "/stonks-jh-1.0-SNAPSHOT.jar"]

@@ -1,21 +1,12 @@
 version: "3"
 
-networks:
-  stonks-net:
-    ipam:
-      driver: default
-      config:
-        - subnet: "192.168.100.0/24"
-
 services:
   db:
     container_name: stonks-db
-    build:
-      context: .
-      dockerfile: Dockerfile-db
-    networks:
-      stonks-net:
-        ipv4_address: 192.168.100.10
+    image: postgres
+    environment:
+      - POSTGRES_USER=stonks
+      - POSTGRES_PASSWORD=stonks
 
   app:
     depends_on:
@@ -23,9 +14,6 @@ services:
     container_name: stonks-app
     build:
       context: .
-      dockerfile: Dockerfile-app
-    networks:
-      stonks-net:
-        ipv4_address: 192.168.100.11
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
