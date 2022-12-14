@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  db:
+    container_name: stonks-db
+    image: postgres
+    environment:
+      - POSTGRES_USER=stonks
+      - POSTGRES_PASSWORD=stonks
+
+  app:
+    depends_on:
+      - db
+    container_name: stonks-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"

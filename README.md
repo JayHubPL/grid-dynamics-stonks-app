@@ -24,4 +24,18 @@
 10. **(OPTIONAL)** Stock price caching
 
 ## Running the application
-**TODO**
+### Requirements
+> docker, docker-compose
+### Run
+1. Start the application
+```shell
+make start
+```
+2. Stop the application
+```shell
+make stop
+```
+3. Clean up the docker images
+```shell
+make clean
+```
