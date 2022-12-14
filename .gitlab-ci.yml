@@ -1,0 +1,34 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+
+variables:
+  IMAGE_OPENJDK_GRADLE: gradle:7.6.0-jdk17-alpine # This image is incorrect
+
+stages:
+  - clean
+  - build
+  - test
+
+clean:
+  image: $IMAGE_OPENJDK_GRADLE
+  stage: clean
+  script:
+    - echo "Cleaning leftovers from previous builds"
+    - sh $CI_PROJECT_DIR/gradlew clean
+
+gradle-build:
+  image: $IMAGE_OPENJDK_GRADLE
+  stage: build
+  script:
+    - echo "Compiling the code"
+    - sh $CI_PROJECT_DIR/gradlew assemble
+  artifacts:
+  paths:
+    - build/libs/stonks-jh-*.jar
+
+unit-test:
+  stage: test
+  script:
+    - echo "Executing unit tests for branch $CI_COMMIT_BRANCH"
+    - sh $CI_PROJECT_DIR/gradlew test -Dspring.profiles.active=test
