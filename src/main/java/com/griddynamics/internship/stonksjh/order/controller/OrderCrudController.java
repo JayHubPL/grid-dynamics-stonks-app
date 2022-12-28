@@ -21,7 +21,6 @@ import com.griddynamics.internship.stonksjh.order.dto.OrderDTO;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.OrderNotFoundException;
 import com.griddynamics.internship.stonksjh.order.mapper.OrderMapper;
-import com.griddynamics.internship.stonksjh.order.model.Order;
 import com.griddynamics.internship.stonksjh.order.repository.OrderRepository;
 
 import lombok.val;
@@ -53,7 +52,7 @@ public class OrderCrudController {
         value = "/get/{uuid}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<OrderDTO> read(@PathVariable UUID uuid) throws NoSuchMethodException {
+    public ResponseEntity<?> read(@PathVariable UUID uuid) throws NoSuchMethodException {
         val foundEntity = orderRepository.findByUUID(uuid).orElseThrow(() -> new OrderNotFoundException(uuid));
         val orderDto = OrderMapper.INSTANCE.entityToDto(foundEntity);
         val links = Set.of(
@@ -73,16 +72,38 @@ public class OrderCrudController {
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaTypes.HAL_JSON_VALUE
     )
-    public ResponseEntity<Order> update(@PathVariable UUID uuid, @RequestBody OrderDTO orderDTO) {
-        return null; // TODO
+    public ResponseEntity<?> update(@PathVariable UUID uuid, @RequestBody OrderDTO orderDTO) throws NoSuchMethodException {
+        validateAmount(orderDTO.getAmount());
+        validateSymbol(orderDTO.getSymbol());
+        val updatedEntity = orderRepository.findByUUID(uuid).orElseThrow(() -> new OrderNotFoundException(uuid));
+        updatedEntity.setAmount(orderDTO.getAmount());
+        updatedEntity.setSymbol(orderDTO.getSymbol());
+
+        val links = Set.of(
+                linkTo(OrderCrudController.class.getMethod("read", UUID.class), updatedEntity.getUuid())
+                    .withRel("read"),
+                linkTo(OrderCrudController.class.getMethod("update", UUID.class, OrderDTO.class),
+                    updatedEntity.getUuid(), OrderMapper.INSTANCE.entityToDto(updatedEntity)
+                ).withSelfRel(),
+                linkTo(OrderCrudController.class.getMethod("delete", UUID.class), updatedEntity.getUuid())
+                    .withRel("delete")
+        );
+        val responseDTO = OrderMapper.INSTANCE.entityToDto(orderRepository.save(updatedEntity));
+        responseDTO.add(links);
+
+        return ResponseEntity.ok(responseDTO);
+
     }
 
     @DeleteMapping(
         value = "delete/{uuid}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<Order> delete(@PathVariable UUID uuid) {
-        return null; // TODO
+    public ResponseEntity<?> delete(@PathVariable UUID uuid) {
+        val deletedEntity = orderRepository.findByUUID(uuid).orElseThrow(() -> new OrderNotFoundException(uuid));
+        orderRepository.delete(deletedEntity);
+
+        return ResponseEntity.ok(OrderMapper.INSTANCE.entityToDto(deletedEntity));
     }
 
     private void validateSymbol(String symbol) {
