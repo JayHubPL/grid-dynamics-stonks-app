@@ -1,7 +1,6 @@
 package com.griddynamics.internship.stonksjh.order.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +31,9 @@ import lombok.val;
 @ExtendWith(MockitoExtension.class)
 public class OrderCrudControllerTest {
     
+    public static final String UUID_REGEX =
+        "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}";
+
     @Autowired
     private MockMvc mockMvc;
     @MockBean
@@ -63,7 +65,7 @@ public class OrderCrudControllerTest {
             .getResponse();
 
             assertThat(response.getHeader("Location"))
-                .endsWith(linkTo(OrderCrudController.class.getMethod("read", UUID.class), anyString()).toString());
+                .matches(".*" + linkTo(OrderCrudController.class.getMethod("read", UUID.class), "") + UUID_REGEX + "$");
         }
 
     }
