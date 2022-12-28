@@ -33,7 +33,6 @@ public class OrderCrudController {
     private OrderRepository orderRepository;
 
     @PostMapping(
-        value = "/create",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -49,7 +48,7 @@ public class OrderCrudController {
     }
 
     @GetMapping(
-        value = "/get/{uuid}",
+        value = "/{uuid}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> read(@PathVariable UUID uuid) throws NoSuchMethodException {
@@ -67,8 +66,8 @@ public class OrderCrudController {
         return ResponseEntity.ok(orderDto);
     }
 
-    @PostMapping(
-        value = "/update/{uuid}",
+    @PutMapping(
+        value = "/{uuid}",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaTypes.HAL_JSON_VALUE
     )
@@ -96,7 +95,7 @@ public class OrderCrudController {
     }
 
     @DeleteMapping(
-        value = "delete/{uuid}",
+        value = "/{uuid}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> delete(@PathVariable UUID uuid) {
