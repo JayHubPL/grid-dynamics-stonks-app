@@ -1,6 +1,8 @@
 package com.griddynamics.internship.stonksjh.order.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,7 +25,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.griddynamics.internship.stonksjh.order.dto.OrderDTO;
-import com.griddynamics.internship.stonksjh.order.repository.OrderRepository;
+import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidStockAmountException;
+import com.griddynamics.internship.stonksjh.order.service.OrderService;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -40,7 +43,7 @@ public class OrderCrudControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @MockBean
-    OrderRepository mockedOrderRepository;
+    OrderService mockedOrderService;
 
     private OrderDTO orderDTO;
 
@@ -59,6 +62,13 @@ public class OrderCrudControllerTest {
             orderDTO.setAmount(amount);
             orderDTO.setSymbol(symbol);
 
+            when(mockedOrderService.createOrder(orderDTO)).thenReturn(new OrderDTO(
+                UUID.randomUUID(),
+                orderDTO.getOrderType(),
+                orderDTO.getAmount(),
+                orderDTO.getSymbol()
+            ));
+
             val response = mockMvc.perform(MockMvcRequestBuilders
                 .post(linkTo(OrderCrudController.class.getMethod("create", OrderDTO.class), orderDTO).toUri())
                 .content(new ObjectMapper().writeValueAsString(orderDTO))
@@ -70,6 +80,8 @@ public class OrderCrudControllerTest {
 
             assertThat(response.getHeader("Location"))
                 .matches(LOCALHOST + linkTo(OrderCrudController.class.getMethod("read", UUID.class), "") + UUID_REGEX + "$");
+
+            verify(mockedOrderService).createOrder(orderDTO);
         }
 
         @ParameterizedTest(name = "{index}: orderData=[{0},{1}]")
@@ -79,6 +91,8 @@ public class OrderCrudControllerTest {
             orderDTO.setAmount(amount);
             orderDTO.setSymbol(symbol);
 
+            when(mockedOrderService.createOrder(orderDTO)).thenThrow(new InvalidStockAmountException(amount));
+
             mockMvc.perform(MockMvcRequestBuilders
                 .post(linkTo(OrderCrudController.class.getMethod("create", OrderDTO.class), orderDTO).toUri())
                 .content(new ObjectMapper().writeValueAsString(orderDTO))
@@ -87,6 +101,8 @@ public class OrderCrudControllerTest {
             ).andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message").isNotEmpty())
             .andExpect(jsonPath("$.timestamp").isNotEmpty());
+
+            verify(mockedOrderService).createOrder(orderDTO);
         }
 
 
