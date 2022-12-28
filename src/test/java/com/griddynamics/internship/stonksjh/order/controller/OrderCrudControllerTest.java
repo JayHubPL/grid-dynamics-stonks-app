@@ -55,7 +55,7 @@ public class OrderCrudControllerTest {
         @ParameterizedTest(name = "{index}: user=[{0},{1}]")
         @MethodSource("com.griddynamics.internship.stonksjh.order.controller.util.TestDataFactory#validOrderData")
         @SneakyThrows
-        void create_OrderIsValid_ShouldReturn201(int amount, String symbol) {
+        void create_OrderDataIsValid_ShouldReturn201(int amount, String symbol) {
             orderDTO.setAmount(amount);
             orderDTO.setSymbol(symbol);
 
@@ -75,7 +75,7 @@ public class OrderCrudControllerTest {
         @ParameterizedTest(name = "{index}: user=[{0},{1}]")
         @MethodSource("com.griddynamics.internship.stonksjh.order.controller.util.TestDataFactory#invalidOrderData")
         @SneakyThrows
-        void create_shouldReturnBadRequestResponse_whenDataHasIllegalFormatting(int amount, String symbol) {
+        void create_OrderDataIsInvalid_ShouldReturn400(int amount, String symbol) {
             orderDTO.setAmount(amount);
             orderDTO.setSymbol(symbol);
 
