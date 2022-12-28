@@ -8,7 +8,7 @@ import org.mapstruct.factory.Mappers;
 import com.griddynamics.internship.stonksjh.order.dto.OrderDTO;
 import com.griddynamics.internship.stonksjh.order.model.Order;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE) // TODO make 'componentModel = "spring"' work
 public interface OrderMapper {
     
     OrderMapper INSTANCE = Mappers.getMapper(OrderMapper.class);
