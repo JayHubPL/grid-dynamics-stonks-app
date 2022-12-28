@@ -52,7 +52,7 @@ public class OrderCrudControllerTest {
     @Nested
     class Create {
 
-        @ParameterizedTest(name = "{index}: user=[{0},{1}]")
+        @ParameterizedTest(name = "{index}: orderData=[{0},{1}]")
         @MethodSource("com.griddynamics.internship.stonksjh.order.controller.util.TestDataFactory#validOrderData")
         @SneakyThrows
         void create_OrderDataIsValid_ShouldReturn201(int amount, String symbol) {
@@ -72,7 +72,7 @@ public class OrderCrudControllerTest {
                 .matches(LOCALHOST + linkTo(OrderCrudController.class.getMethod("read", UUID.class), "") + UUID_REGEX + "$");
         }
 
-        @ParameterizedTest(name = "{index}: user=[{0},{1}]")
+        @ParameterizedTest(name = "{index}: orderData=[{0},{1}]")
         @MethodSource("com.griddynamics.internship.stonksjh.order.controller.util.TestDataFactory#invalidOrderData")
         @SneakyThrows
         void create_OrderDataIsInvalid_ShouldReturn400(int amount, String symbol) {
