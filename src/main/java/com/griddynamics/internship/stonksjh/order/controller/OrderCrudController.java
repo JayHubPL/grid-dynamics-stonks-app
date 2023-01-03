@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.griddynamics.internship.stonksjh.order.dto.OrderDTO;
-import com.griddynamics.internship.stonksjh.order.service.OrderService;
+import com.griddynamics.internship.stonksjh.order.service.OrderCrudService;
 
 import lombok.val;
 
@@ -27,14 +27,14 @@ import lombok.val;
 public class OrderCrudController {
     
     @Autowired
-    private OrderService orderService;
+    private OrderCrudService crudService;
 
     @PostMapping(
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> create(@RequestBody OrderDTO orderDTO) throws NoSuchMethodException {
-        val createdOrderDTO = orderService.createOrder(orderDTO);
+        val createdOrderDTO = crudService.createOrder(orderDTO);
         return ResponseEntity.created(
             linkTo(OrderCrudController.class.getMethod("read", UUID.class), createdOrderDTO.getUuid())
                 .withSelfRel().toUri()
@@ -46,7 +46,7 @@ public class OrderCrudController {
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> read(@PathVariable UUID uuid) throws NoSuchMethodException {
-        val readOrderDto = orderService.readOneOrder(uuid);
+        val readOrderDto = crudService.readOneOrder(uuid);
         return ResponseEntity.ok(readOrderDto);
     }
 
@@ -56,7 +56,7 @@ public class OrderCrudController {
         produces = MediaTypes.HAL_JSON_VALUE
     )
     public ResponseEntity<?> update(@PathVariable UUID uuid, @RequestBody OrderDTO orderDTO) throws NoSuchMethodException {
-        val updatedOrderDTO = orderService.updateOrder(uuid, orderDTO);
+        val updatedOrderDTO = crudService.updateOrder(uuid, orderDTO);
         return ResponseEntity.ok(updatedOrderDTO);
     }
 
@@ -65,7 +65,7 @@ public class OrderCrudController {
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> delete(@PathVariable UUID uuid) {
-        val deletedEntity = orderService.deleteOrder(uuid);
+        val deletedEntity = crudService.deleteOrder(uuid);
         return ResponseEntity.ok(deletedEntity);
     }
 

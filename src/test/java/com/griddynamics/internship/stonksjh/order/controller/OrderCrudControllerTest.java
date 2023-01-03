@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.griddynamics.internship.stonksjh.order.dto.OrderDTO;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidStockAmountException;
-import com.griddynamics.internship.stonksjh.order.service.OrderService;
+import com.griddynamics.internship.stonksjh.order.service.OrderCrudService;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -43,7 +43,7 @@ public class OrderCrudControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @MockBean
-    OrderService mockedOrderService;
+    OrderCrudService mockedOrderService;
 
     private OrderDTO orderDTO;
 

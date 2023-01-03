@@ -13,24 +13,27 @@ import com.griddynamics.internship.stonksjh.order.model.Order;
 import com.griddynamics.internship.stonksjh.order.repository.OrderRepository;
 
 @Service
-public class OrderService {
+public class OrderCrudService {
     
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderMapper orderMapper;
 
     public OrderDTO createOrder(OrderDTO orderDTO) {
         validateAmount(orderDTO.getAmount());
         validateSymbol(orderDTO.getSymbol());
         orderDTO.setUuid(UUID.randomUUID());
-        Order orderEntity = OrderMapper.INSTANCE.dtoToEntity(orderDTO);
+        Order orderEntity = orderMapper.dtoToEntity(orderDTO);
         orderEntity = orderRepository.save(orderEntity);
-        return OrderMapper.INSTANCE.entityToDto(orderEntity);
+        return orderMapper.entityToDto(orderEntity);
     }
 
     public OrderDTO readOneOrder(UUID uuid) {
         Order orderEntity = orderRepository.findByUUID(uuid)
             .orElseThrow(() -> new OrderNotFoundException(uuid));
-        return OrderMapper.INSTANCE.entityToDto(orderEntity);
+        return orderMapper.entityToDto(orderEntity);
     }
 
     public OrderDTO updateOrder(UUID uuid, OrderDTO orderDTO) {
@@ -41,14 +44,14 @@ public class OrderService {
         orderEntity.setAmount(orderDTO.getAmount());
         orderEntity.setSymbol(orderDTO.getSymbol());
         orderEntity = orderRepository.save(orderEntity);
-        return OrderMapper.INSTANCE.entityToDto(orderEntity);
+        return orderMapper.entityToDto(orderEntity);
     }
 
     public OrderDTO deleteOrder(UUID uuid) {
         Order orderEntity = orderRepository.findByUUID(uuid)
             .orElseThrow(() -> new OrderNotFoundException(uuid));
         orderRepository.delete(orderEntity);
-        return OrderMapper.INSTANCE.entityToDto(orderEntity);
+        return orderMapper.entityToDto(orderEntity);
     }
 
     private void validateSymbol(String symbol) {
