@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.griddynamics.internship.stonksjh.order.dto.OrderDTO;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidStockAmountException;
+import com.griddynamics.internship.stonksjh.order.model.OrderType;
 import com.griddynamics.internship.stonksjh.order.service.OrderCrudService;
 
 import lombok.SneakyThrows;
@@ -105,6 +107,30 @@ public class OrderCrudControllerTest {
             verify(mockedOrderService).createOrder(orderDTO);
         }
 
+    }
 
+    @Nested
+    class Read {
+        @Test
+        @SneakyThrows
+        void readOne_OrderExists_ShouldReturn200() {
+            val uuid = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+            orderDTO.setAmount(1);
+            orderDTO.setOrderType(OrderType.BUY);
+            orderDTO.setSymbol("AAPL");
+            orderDTO.setUuid(uuid);
+
+            when(mockedOrderService.readOneOrder(uuid)).thenReturn(orderDTO);
+
+            mockMvc.perform(MockMvcRequestBuilders
+                .get(linkTo(OrderCrudController.class.getMethod("read", UUID.class), uuid).toUri())
+            ).andExpect(status().isOk())
+            .andExpect(jsonPath("$.amount").value(orderDTO.getAmount()))
+            .andExpect(jsonPath("$.orderType").value(orderDTO.getOrderType().name()))
+            .andExpect(jsonPath("$.symbol").value(orderDTO.getSymbol()))
+            .andExpect(jsonPath("$.uuid").value(orderDTO.getUuid().toString()));
+
+            verify(mockedOrderService).readOneOrder(uuid);
+        }
     }
 }
