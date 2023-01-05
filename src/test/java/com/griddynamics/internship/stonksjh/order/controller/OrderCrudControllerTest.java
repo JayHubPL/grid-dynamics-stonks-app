@@ -1,6 +1,7 @@
 package com.griddynamics.internship.stonksjh.order.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -111,6 +112,7 @@ public class OrderCrudControllerTest {
 
     @Nested
     class Read {
+
         @Test
         @SneakyThrows
         void readOne_OrderExists_ShouldReturn200() {
@@ -131,6 +133,20 @@ public class OrderCrudControllerTest {
             .andExpect(jsonPath("$.uuid").value(orderDTO.getUuid().toString()));
 
             verify(mockedOrderService).readOneOrder(uuid);
+        }
+
+        @Test
+        @SneakyThrows
+        void readOne_UuidIsOfInvalidFormat_ShouldReturnBadRequest() {
+            val uuidString = "aaa";
+            val expectedExceptionMessage = "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'; "
+                + "Invalid UUID string: " + uuidString;
+
+            mockMvc.perform(MockMvcRequestBuilders
+                .get(linkTo(OrderCrudController.class.getMethod("read", UUID.class), uuidString).toUri())
+            ).andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", matchesPattern(".*" + expectedExceptionMessage + ".*")))
+            .andExpect(jsonPath("$.timestamp").isNotEmpty());
         }
     }
 }
