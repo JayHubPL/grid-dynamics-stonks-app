@@ -30,4 +30,10 @@ public class OrderExceptionHandler {
         return new ApiExceptionDTO(e.getMessage());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiExceptionDTO handleIllegalArgumentException(Exception e) {
+        return new ApiExceptionDTO(e.getMessage());
+    }
+
 }
