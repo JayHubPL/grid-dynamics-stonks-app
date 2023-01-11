@@ -5,7 +5,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,7 +52,7 @@ public class OrderCrudController {
     @PutMapping(
         value = "/{uuid}",
         consumes = MediaType.APPLICATION_JSON_VALUE,
-        produces = MediaTypes.HAL_JSON_VALUE
+        produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> update(@PathVariable UUID uuid, @RequestBody OrderDTO orderDTO) throws NoSuchMethodException {
         val updatedOrderDTO = crudService.updateOrder(uuid, orderDTO);
@@ -61,12 +60,11 @@ public class OrderCrudController {
     }
 
     @DeleteMapping(
-        value = "/{uuid}",
-        produces = MediaType.APPLICATION_JSON_VALUE
+        value = "/{uuid}"
     )
     public ResponseEntity<?> delete(@PathVariable UUID uuid) {
-        val deletedEntity = crudService.deleteOrder(uuid);
-        return ResponseEntity.ok(deletedEntity);
+        crudService.deleteOrder(uuid);
+        return ResponseEntity.ok(null);
     }
 
 }

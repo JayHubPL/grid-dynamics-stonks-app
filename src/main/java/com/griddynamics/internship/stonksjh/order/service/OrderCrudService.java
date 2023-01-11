@@ -47,11 +47,10 @@ public class OrderCrudService {
         return orderMapper.entityToDto(orderEntity);
     }
 
-    public OrderDTO deleteOrder(UUID uuid) {
+    public void deleteOrder(UUID uuid) {
         Order orderEntity = orderRepository.findByUUID(uuid)
             .orElseThrow(() -> new OrderNotFoundException(uuid));
         orderRepository.delete(orderEntity);
-        return orderMapper.entityToDto(orderEntity);
     }
 
     private void validateSymbol(String symbol) {
