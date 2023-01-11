@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.griddynamics.internship.stonksjh.order.controller.OrderCrudController;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidStockAmountException;
+import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.OrderNotFoundException;
 
 @RestControllerAdvice(basePackageClasses = OrderCrudController.class)
@@ -33,6 +34,12 @@ public class OrderExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiExceptionDTO handleIllegalArgumentException(Exception e) {
+        return new ApiExceptionDTO(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidSymbolException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiExceptionDTO handleInvalidSymbolException(Exception e) {
         return new ApiExceptionDTO(e.getMessage());
     }
 

@@ -1,5 +1,6 @@
 package com.griddynamics.internship.stonksjh.order.service;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,9 +8,11 @@ import org.springframework.stereotype.Service;
 
 import com.griddynamics.internship.stonksjh.order.dto.OrderDTO;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidStockAmountException;
+import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.OrderNotFoundException;
 import com.griddynamics.internship.stonksjh.order.mapper.OrderMapper;
 import com.griddynamics.internship.stonksjh.order.model.Order;
+import com.griddynamics.internship.stonksjh.order.model.Symbol;
 import com.griddynamics.internship.stonksjh.order.repository.OrderRepository;
 
 @Service
@@ -54,7 +57,13 @@ public class OrderCrudService {
     }
 
     private void validateSymbol(String symbol) {
-        // TODO should check if given symbol exists on finnhub.io
+        boolean isValid = Arrays.stream(Symbol.values())
+            .map(Symbol::toString)
+            .filter(s -> s.equals(symbol))
+            .count() == 1;
+        if (!isValid) {
+            throw new InvalidSymbolException(symbol);
+        }
     }
 
     private void validateAmount(int amount) {
