@@ -6,12 +6,15 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.griddynamics.internship.stonksjh.order.dto.CrudRequestDTO;
 import com.griddynamics.internship.stonksjh.order.dto.OrderDTO;
+import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.OrderNotFoundException;
 import com.griddynamics.internship.stonksjh.order.mapper.OrderMapper;
 import com.griddynamics.internship.stonksjh.order.model.Order;
+import com.griddynamics.internship.stonksjh.order.model.OrderType;
 import com.griddynamics.internship.stonksjh.order.model.Symbol;
 import com.griddynamics.internship.stonksjh.order.repository.OrderRepository;
 
@@ -24,11 +27,10 @@ public class OrderCrudService {
     @Autowired
     private OrderMapper orderMapper;
 
-    public OrderDTO createOrder(OrderDTO orderDTO) {
-        validateAmount(orderDTO.getAmount());
-        validateSymbol(orderDTO.getSymbol());
-        orderDTO.setUuid(UUID.randomUUID());
-        Order orderEntity = orderMapper.dtoToEntity(orderDTO);
+    public OrderDTO createOrder(CrudRequestDTO crudRequestDTO) {
+        validateRequestDtoData(crudRequestDTO);
+        Order orderEntity = orderMapper.requestDtoToEntity(crudRequestDTO);
+        orderEntity.setUuid(UUID.randomUUID());
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToDto(orderEntity);
     }
@@ -39,13 +41,13 @@ public class OrderCrudService {
         return orderMapper.entityToDto(orderEntity);
     }
 
-    public OrderDTO updateOrder(UUID uuid, OrderDTO orderDTO) {
-        validateAmount(orderDTO.getAmount());
-        validateSymbol(orderDTO.getSymbol());
+    public OrderDTO updateOrder(UUID uuid, CrudRequestDTO crudRequestDTO) {
+        validateRequestDtoData(crudRequestDTO);
         Order orderEntity = orderRepository.findByUUID(uuid)
             .orElseThrow(() -> new OrderNotFoundException(uuid));
-        orderEntity.setAmount(orderDTO.getAmount());
-        orderEntity.setSymbol(orderDTO.getSymbol());
+        orderEntity.setAmount(crudRequestDTO.getAmount());
+        orderEntity.setSymbol(crudRequestDTO.getSymbol());
+        orderEntity.setOrderType(OrderType.valueOf(crudRequestDTO.getOrderType()));
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToDto(orderEntity);
     }
@@ -54,6 +56,12 @@ public class OrderCrudService {
         Order orderEntity = orderRepository.findByUUID(uuid)
             .orElseThrow(() -> new OrderNotFoundException(uuid));
         orderRepository.delete(orderEntity);
+    }
+
+    private void validateRequestDtoData(CrudRequestDTO crudRequestDTO) {
+        validateAmount(crudRequestDTO.getAmount());
+        validateSymbol(crudRequestDTO.getSymbol());
+        validateOrderType(crudRequestDTO.getOrderType());
     }
 
     private void validateSymbol(String symbol) {
@@ -69,6 +77,16 @@ public class OrderCrudService {
     private void validateAmount(int amount) {
         if (amount <= 0) {
             throw new InvalidStockAmountException(amount);
+        }
+    }
+
+    private void validateOrderType(String orderType) {
+        boolean isValid = Arrays.stream(OrderType.values())
+            .map(OrderType::toString)
+            .filter(s -> s.equals(orderType))
+            .count() == 1;
+        if (!isValid) {
+            throw new InvalidOrderTypeException(orderType);
         }
     }
 

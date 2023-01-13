@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.griddynamics.internship.stonksjh.order.controller.OrderCrudController;
+import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.order.exception.exceptions.OrderNotFoundException;
@@ -40,6 +41,12 @@ public class OrderExceptionHandler {
     @ExceptionHandler(InvalidSymbolException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiExceptionDTO handleInvalidSymbolException(Exception e) {
+        return new ApiExceptionDTO(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidOrderTypeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiExceptionDTO handleInvalidOrderTypeException(Exception e) {
         return new ApiExceptionDTO(e.getMessage());
     }
 

@@ -3,6 +3,7 @@ package com.griddynamics.internship.stonksjh.order.dto;
 import java.util.UUID;
 
 import com.griddynamics.internship.stonksjh.order.model.OrderType;
+import com.griddynamics.internship.stonksjh.order.model.Symbol;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,6 @@ public class OrderDTO {
     private UUID uuid;
     private OrderType orderType;
     private int amount;
-    private String symbol;
+    private Symbol symbol;
 
 }

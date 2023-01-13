@@ -8,15 +8,15 @@ public class TestDataFactory {
     
     public static Stream<Arguments> validOrderData() {
         return Stream.of(
-            Arguments.of(10, "AAPL"),
-            Arguments.of(1, "MSFT")
+            Arguments.of(10, "AAPL", "SELL"),
+            Arguments.of(1, "MSFT", "BUY")
         );
     }
 
     public static Stream<Arguments> invalidOrderData() {
         return Stream.of(
-            Arguments.of(0, "*"),
-            Arguments.of(-5, "")
+            Arguments.of(0, "*", "XXX"),
+            Arguments.of(-5, "", "")
         );
     }
 
