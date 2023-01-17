@@ -1,4 +1,4 @@
-package com.griddynamics.internship.stonksjh.order.controller.util;
+package com.griddynamics.internship.stonksjh.util;
 
 import java.util.stream.Stream;
 

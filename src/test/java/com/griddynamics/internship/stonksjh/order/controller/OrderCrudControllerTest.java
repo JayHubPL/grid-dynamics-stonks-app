@@ -63,7 +63,7 @@ public class OrderCrudControllerTest {
     class Create {
 
         @ParameterizedTest(name = "{index}: orderData=[{0},{1},{2}]")
-        @MethodSource("com.griddynamics.internship.stonksjh.order.controller.util.TestDataFactory#validOrderData")
+        @MethodSource("com.griddynamics.internship.stonksjh.util.TestDataFactory#validOrderData")
         @SneakyThrows
         void create_OrderDataIsValid_ShouldReturnCreatedResponse(int amount, String symbol, String orderType) {
             crudRequestDTO.setAmount(amount);
@@ -89,7 +89,7 @@ public class OrderCrudControllerTest {
         }
 
         @ParameterizedTest(name = "{index}: orderData=[{0},{1},{2}]")
-        @MethodSource("com.griddynamics.internship.stonksjh.order.controller.util.TestDataFactory#invalidOrderData")
+        @MethodSource("com.griddynamics.internship.stonksjh.util.TestDataFactory#invalidOrderData")
         @SneakyThrows
         void create_OrderDataIsInvalid_ShouldReturnBadResponse(int amount, String symbol, String orderType) {
             crudRequestDTO.setAmount(amount);
@@ -175,7 +175,7 @@ public class OrderCrudControllerTest {
     class Update {
 
         @ParameterizedTest
-        @MethodSource("com.griddynamics.internship.stonksjh.order.controller.util.TestDataFactory#validOrderData")
+        @MethodSource("com.griddynamics.internship.stonksjh.util.TestDataFactory#validOrderData")
         @SneakyThrows
         void update_OrderDataIsValid_ShouldReturnOkResponse(int amount, String symbol, String orderType) {
             crudRequestDTO.setAmount(amount);
@@ -204,7 +204,7 @@ public class OrderCrudControllerTest {
         }
 
         @ParameterizedTest
-        @MethodSource("com.griddynamics.internship.stonksjh.order.controller.util.TestDataFactory#invalidOrderData")
+        @MethodSource("com.griddynamics.internship.stonksjh.util.TestDataFactory#invalidOrderData")
         @SneakyThrows
         void update_OrderDataIsInvalid_ShouldReturnBadRequest(int amount, String symbol, String orderType) {
             crudRequestDTO.setAmount(amount);
