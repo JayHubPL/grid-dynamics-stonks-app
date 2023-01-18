@@ -174,7 +174,7 @@ public class OrderCrudControllerTest {
     @Nested
     class Update {
 
-        @ParameterizedTest
+        @ParameterizedTest(name = "{index}: orderData=[{0},{1},{2}]")
         @MethodSource("com.griddynamics.internship.stonksjh.util.TestDataFactory#validOrderData")
         @SneakyThrows
         void update_OrderDataIsValid_ShouldReturnOkResponse(int amount, String symbol, String orderType) {
@@ -203,7 +203,7 @@ public class OrderCrudControllerTest {
             verify(mockedOrderService).updateOrder(VALID_UUID, crudRequestDTO);
         }
 
-        @ParameterizedTest
+        @ParameterizedTest(name = "{index}: orderData=[{0},{1},{2}]")
         @MethodSource("com.griddynamics.internship.stonksjh.util.TestDataFactory#invalidOrderData")
         @SneakyThrows
         void update_OrderDataIsInvalid_ShouldReturnBadRequest(int amount, String symbol, String orderType) {
