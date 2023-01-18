@@ -31,7 +31,7 @@ public class OrderCrudController {
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> create(@RequestBody CrudRequestDTO crudRequestDTO) throws NoSuchMethodException {
+    public ResponseEntity<?> create(@RequestBody CrudRequestDTO crudRequestDTO) {
         val orderDTO = crudService.createOrder(crudRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(orderDTO);
     }
@@ -40,7 +40,7 @@ public class OrderCrudController {
         value = "/{uuid}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> read(@PathVariable UUID uuid) throws NoSuchMethodException {
+    public ResponseEntity<?> read(@PathVariable UUID uuid) {
         val readOrderDto = crudService.readOneOrder(uuid);
         return ResponseEntity.ok(readOrderDto);
     }
