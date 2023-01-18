@@ -17,37 +17,37 @@ public class OrderExceptionHandler {
     @ExceptionHandler(OrderNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiExceptionDTO handleOrderNotFoundException(Exception e) {
-        return new ApiExceptionDTO(e.getMessage());
+        return ApiExceptionDTO.of(e.getMessage());
     }
 
     @ExceptionHandler(InvalidStockAmountException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiExceptionDTO handleInvalidStockAmountException(Exception e) {
-        return new ApiExceptionDTO(e.getMessage());
+        return ApiExceptionDTO.of(e.getMessage());
     }
 
     @ExceptionHandler(NoSuchMethodException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiExceptionDTO handleNoSuchMethodException(Exception e) {
-        return new ApiExceptionDTO(e.getMessage());
+        return ApiExceptionDTO.of(e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiExceptionDTO handleIllegalArgumentException(Exception e) {
-        return new ApiExceptionDTO(e.getMessage());
+        return ApiExceptionDTO.of(e.getMessage());
     }
 
     @ExceptionHandler(InvalidSymbolException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiExceptionDTO handleInvalidSymbolException(Exception e) {
-        return new ApiExceptionDTO(e.getMessage());
+        return ApiExceptionDTO.of(e.getMessage());
     }
 
     @ExceptionHandler(InvalidOrderTypeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiExceptionDTO handleInvalidOrderTypeException(Exception e) {
-        return new ApiExceptionDTO(e.getMessage());
+        return ApiExceptionDTO.of(e.getMessage());
     }
 
 }

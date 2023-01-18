@@ -1,18 +1,17 @@
 package com.griddynamics.internship.stonksjh.order.exception;
 
-import lombok.Data;
+import lombok.Builder;
 
 import java.time.ZonedDateTime;
 
-@Data
-public class ApiExceptionDTO {
+@Builder
+public record ApiExceptionDTO(String message, ZonedDateTime timestamp) {
 
-    private final String message;
-    private final ZonedDateTime timestamp;
-
-    public ApiExceptionDTO(String message) {
-        this.message = message;
-        timestamp = ZonedDateTime.now();
+    public static ApiExceptionDTO of(String message) {
+        return ApiExceptionDTO.builder()
+            .message(message)
+            .timestamp(ZonedDateTime.now())
+            .build();
     }
-
+    
 }
