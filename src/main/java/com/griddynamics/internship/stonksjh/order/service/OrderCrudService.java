@@ -42,9 +42,9 @@ public class OrderCrudService {
     }
 
     public OrderDTO updateOrder(UUID uuid, CrudRequestDTO crudRequestDTO) {
-        validateRequestDtoData(crudRequestDTO);
         Order orderEntity = orderRepository.findByUUID(uuid)
             .orElseThrow(() -> new OrderNotFoundException(uuid));
+        validateRequestDtoData(crudRequestDTO);
         orderEntity.setAmount(crudRequestDTO.getAmount());
         orderEntity.setSymbol(crudRequestDTO.getSymbol());
         orderEntity.setOrderType(OrderType.valueOf(crudRequestDTO.getOrderType()));
