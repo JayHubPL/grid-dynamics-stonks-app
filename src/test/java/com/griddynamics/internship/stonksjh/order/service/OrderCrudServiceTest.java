@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -41,14 +41,20 @@ public class OrderCrudServiceTest {
     private OrderRepository mockedOrderRepository;
     @MockBean
     private OrderMapper mockedOrderMapper;
-    @InjectMocks
+    
     private OrderCrudService orderCrudService;
 
     private CrudRequestDTO crudRequestDTO;
     private OrderDTO orderDTO;
+
     private final OrderMapper orderMapper = Mappers.getMapper(OrderMapper.class);
     private final UUID VALID_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
     private final OrderDTO PREDEFINED_ORDER = new OrderDTO(VALID_UUID, OrderType.BUY, 1, Symbol.AAPL);
+
+    @BeforeAll
+    void initOrderCrudService() {
+        orderCrudService = new OrderCrudService(mockedOrderRepository, mockedOrderMapper);
+    }
 
     @BeforeEach
     void initCrudRequestDTO() {

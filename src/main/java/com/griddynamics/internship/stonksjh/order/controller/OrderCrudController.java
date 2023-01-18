@@ -18,14 +18,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.griddynamics.internship.stonksjh.order.dto.CrudRequestDTO;
 import com.griddynamics.internship.stonksjh.order.service.OrderCrudService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 @RestController
 @RequestMapping("api/orders")
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class OrderCrudController {
     
-    @Autowired
-    private OrderCrudService crudService;
+    private final OrderCrudService crudService;
 
     @PostMapping(
         consumes = MediaType.APPLICATION_JSON_VALUE,

@@ -18,14 +18,14 @@ import com.griddynamics.internship.stonksjh.order.model.OrderType;
 import com.griddynamics.internship.stonksjh.order.model.Symbol;
 import com.griddynamics.internship.stonksjh.order.repository.OrderRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class OrderCrudService {
     
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private OrderMapper orderMapper;
+    private final OrderRepository orderRepository;
+    private final OrderMapper orderMapper;
 
     public OrderDTO createOrder(CrudRequestDTO crudRequestDTO) {
         validateRequestDtoData(crudRequestDTO);
