@@ -1,17 +1,20 @@
 # Stock trading broker project
 
 ## Team
+
 - [Michael Bragilevsky](https://gitlab.griddynamics.net/mbragilevsky) - mentor
 - [Jakub Łaba](https://gitlab.griddynamics.net/jlaba)
 - [Hubert Mazur](https://gitlab.griddynamics.net/hmazur)
 
 ## Tech stack
+
 - Spring Boot
 - Hibernate
 - PostgreSQL
 - Docker
 
 ## Business requirements
+
 1. Main players are `User`, `Stock`, `Broker`, `Order`
 2. CRUD operations for User and Order
 3. Commission percent needs to be calculated based on formula, you decide
@@ -24,18 +27,55 @@
 10. **(OPTIONAL)** Stock price caching
 
 ## Running the application
+
 ### Requirements
+
 > docker, docker-compose
+
 ### Run
+
 1. Start the application
+
 ```shell
 make start
 ```
+
 2. Stop the application
+
 ```shell
 make stop
 ```
+
 3. Clean up the docker images
+
 ```shell
 make clean
+```
+
+## API docs
+
+After running the application, you can access Swagger UI with api docs at
+
+```
+{application context}/swagger-ui.html
+```
+
+Or you can get the raw OpenAPI JSON at
+
+```
+{application context}/v3/api-docs
+```
+
+For example, when running the app locally, the URLs will be:
+
+- Swagger UI
+
+```
+http://localhost:8080/stonks-jh/swagger-ui.html
+```
+
+- OpenAPI JSON
+
+```
+http://localhost:8080/stonks-jh/v3/api-docs
 ```
