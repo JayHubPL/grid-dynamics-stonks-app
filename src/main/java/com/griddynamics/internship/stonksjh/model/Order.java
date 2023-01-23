@@ -42,7 +42,8 @@ public class Order {
     private int amount;
 
     @Column(nullable = false)
-    private String symbol;
+    @Enumerated(value = EnumType.STRING)
+    private Symbol symbol;
 
     public enum Type {
         BUY,

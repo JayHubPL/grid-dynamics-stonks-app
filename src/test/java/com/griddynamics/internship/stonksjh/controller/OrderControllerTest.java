@@ -60,12 +60,15 @@ public class OrderControllerTest {
                     .type(type)
                     .build();
 
-            when(ORDER_SERVICE.create(orderRequestDTO)).thenReturn(new OrderResponseDTO(
-                    VALID_UUID,
-                    Order.Type.valueOf(orderRequestDTO.type()),
-                    orderRequestDTO.amount(),
-                    Order.Symbol.valueOf(orderRequestDTO.symbol())
-            ));
+            when(ORDER_SERVICE.create(orderRequestDTO))
+                    .thenReturn(
+                            OrderResponseDTO.builder()
+                                    .uuid(VALID_UUID)
+                                    .amount(orderRequestDTO.amount())
+                                    .symbol(Order.Symbol.valueOf(orderRequestDTO.symbol()))
+                                    .type(Order.Type.valueOf(orderRequestDTO.type()))
+                                    .build()
+                    );
 
             MVC.perform(MockMvcRequestBuilders
                             .post(linkTo(OrderController.class.getMethod("create", OrderRequestDTO.class), orderRequestDTO).toUri())
@@ -168,12 +171,15 @@ public class OrderControllerTest {
                     .type(type)
                     .build();
 
-            when(ORDER_SERVICE.read(VALID_UUID)).thenReturn(new OrderResponseDTO(
-                    VALID_UUID,
-                    Order.Type.valueOf(orderRequestDTO.type()),
-                    orderRequestDTO.amount(),
-                    Order.Symbol.valueOf(orderRequestDTO.symbol())
-            ));
+            when(ORDER_SERVICE.read(VALID_UUID))
+                    .thenReturn(
+                            OrderResponseDTO.builder()
+                                    .uuid(VALID_UUID)
+                                    .type(Order.Type.valueOf(orderRequestDTO.type()))
+                                    .amount(orderRequestDTO.amount())
+                                    .symbol(Order.Symbol.valueOf(orderRequestDTO.symbol()))
+                                    .build()
+                    );
 
             MVC.perform(MockMvcRequestBuilders
                             .get(linkTo(OrderController.class.getMethod("read", UUID.class), VALID_UUID).toUri())
@@ -230,12 +236,22 @@ public class OrderControllerTest {
                     .type(type)
                     .build();
 
-            when(ORDER_SERVICE.update(VALID_UUID, orderRequestDTO)).thenReturn(new OrderResponseDTO(
-                    VALID_UUID,
-                    Order.Type.valueOf(orderRequestDTO.type()),
-                    orderRequestDTO.amount(),
-                    Order.Symbol.valueOf(orderRequestDTO.symbol())
-            ));
+            //when(ORDER_SERVICE.update(VALID_UUID, orderRequestDTO)).thenReturn(new OrderResponseDTO(
+            //        VALID_UUID,
+            //        Order.Type.valueOf(orderRequestDTO.type()),
+            //        orderRequestDTO.amount(),
+            //        Order.Symbol.valueOf(orderRequestDTO.symbol())
+            //));
+
+            when(ORDER_SERVICE.update(VALID_UUID, orderRequestDTO))
+                    .thenReturn(
+                            OrderResponseDTO.builder()
+                                    .uuid(VALID_UUID)
+                                    .type(Order.Type.valueOf(orderRequestDTO.type()))
+                                    .amount(orderRequestDTO.amount())
+                                    .symbol(Order.Symbol.valueOf(orderRequestDTO.symbol()))
+                                    .build()
+                    );
 
             MVC.perform(MockMvcRequestBuilders
                             .put(linkTo(OrderController.class.getMethod("update", UUID.class, OrderRequestDTO.class),
