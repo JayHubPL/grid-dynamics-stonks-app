@@ -79,3 +79,39 @@ http://localhost:8080/stonks-jh/swagger-ui.html
 ```
 http://localhost:8080/stonks-jh/v3/api-docs
 ```
+
+## Contribution conventions
+
+### Commit messages
+
+Capitalize 1st letter and use present simple
+> ~~Implemented X~~ => Implement X \
+> ~~Docker config~~ => Configure docker
+
+### Branch naming
+
+Use labels - `label/branch-name`
+> `dev` - development of new features\
+> `test` - writing tests\
+> `fix` - fixes of existing features\
+> `refactor` - self explanatory\
+> `config` - configurations (docker, pipelines, etc.)\
+> `doc` - documentation changes
+
+### Merge requests
+
+#### Naming
+
+Name MRs same way as you would name a commit message - since it's
+most likely going to end up as one once you squash and merge.
+
+#### Merging
+
+Let's squash commits to keep the history more readable and concise.
+If one is interested in investigating individual squashed commits,
+they can always explore merged MRs.
+
+### Issues
+
+Same naming guidelines as MRs, try to remember linking MRs to issues for
+more comfortable navigation around the repo.
