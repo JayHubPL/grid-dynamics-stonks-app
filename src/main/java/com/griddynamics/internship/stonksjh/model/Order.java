@@ -6,6 +6,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,7 +19,7 @@ import java.util.UUID;
 import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Entity
-@Table(name = "order")
+@Table(name = "orders")
 @NoArgsConstructor
 @Getter
 @Setter
@@ -46,6 +48,13 @@ public class Order {
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private Symbol symbol;
+
+    @ManyToOne
+    @JoinColumn(
+            nullable = false,
+            updatable = false
+    )
+    private User owner;
 
     public enum Type {
         BUY,

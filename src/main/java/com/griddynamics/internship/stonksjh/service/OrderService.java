@@ -6,9 +6,13 @@ import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeExce
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.exception.order.OrderNotFoundException;
+import com.griddynamics.internship.stonksjh.exception.user.UserNotFoundException;
 import com.griddynamics.internship.stonksjh.mapper.OrderMapper;
 import com.griddynamics.internship.stonksjh.model.Order;
+import com.griddynamics.internship.stonksjh.model.User;
 import com.griddynamics.internship.stonksjh.repository.OrderRepository;
+import com.griddynamics.internship.stonksjh.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +23,16 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
     private final OrderMapper orderMapper;
 
-    public OrderResponseDTO create(OrderRequestDTO orderRequestDTO) {
+    public OrderResponseDTO create(OrderRequestDTO orderRequestDTO, UUID ownerUuid) {
         validateRequestDTO(orderRequestDTO);
         Order orderEntity = orderMapper.requestDtoToEntity(orderRequestDTO);
+        User owner = userRepository.findByUuid(ownerUuid)
+                .orElseThrow(() -> new UserNotFoundException(ownerUuid));
         orderEntity.setUuid(UUID.randomUUID());
+        orderEntity.setOwner(owner);
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToResponseDTO(orderEntity);
     }
