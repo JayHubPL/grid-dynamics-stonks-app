@@ -30,13 +30,13 @@ public class OrderService {
     }
 
     public OrderResponseDTO read(UUID uuid) {
-        Order orderEntity = orderRepository.findByUUID(uuid)
+        Order orderEntity = orderRepository.findByUuid(uuid)
                 .orElseThrow(() -> new OrderNotFoundException(uuid));
         return orderMapper.entityToResponseDTO(orderEntity);
     }
 
     public OrderResponseDTO update(UUID uuid, OrderRequestDTO orderRequestDTO) {
-        Order orderEntity = orderRepository.findByUUID(uuid)
+        Order orderEntity = orderRepository.findByUuid(uuid)
                 .orElseThrow(() -> new OrderNotFoundException(uuid));
         validateRequestDTO(orderRequestDTO);
         orderEntity.setAmount(orderRequestDTO.amount());
@@ -47,7 +47,7 @@ public class OrderService {
     }
 
     public void delete(UUID uuid) {
-        Order orderEntity = orderRepository.findByUUID(uuid)
+        Order orderEntity = orderRepository.findByUuid(uuid)
                 .orElseThrow(() -> new OrderNotFoundException(uuid));
         orderRepository.delete(orderEntity);
     }

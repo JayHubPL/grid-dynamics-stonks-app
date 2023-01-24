@@ -1,6 +1,7 @@
 package com.griddynamics.internship.stonksjh.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
+@Entity
 @Table(name = "order")
 @NoArgsConstructor
 @Getter
