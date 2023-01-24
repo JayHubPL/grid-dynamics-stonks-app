@@ -48,8 +48,7 @@ public class OrderController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> update(@PathVariable UUID uuid, @RequestBody OrderRequestDTO orderRequestDTO)
-            throws NoSuchMethodException {
+    public ResponseEntity<?> update(@PathVariable UUID uuid, @RequestBody OrderRequestDTO orderRequestDTO) {
         val updatedOrderDTO = crudService.update(uuid, orderRequestDTO);
         return ResponseEntity.ok(updatedOrderDTO);
     }

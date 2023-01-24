@@ -12,7 +12,6 @@ import com.griddynamics.internship.stonksjh.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 @Service
@@ -41,7 +40,7 @@ public class OrderService {
                 .orElseThrow(() -> new OrderNotFoundException(uuid));
         validateRequestDTO(orderRequestDTO);
         orderEntity.setAmount(orderRequestDTO.amount());
-        orderEntity.setSymbol(orderRequestDTO.symbol());
+        orderEntity.setSymbol(Order.Symbol.valueOf(orderRequestDTO.symbol()));
         orderEntity.setType(Order.Type.valueOf(orderRequestDTO.type()));
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToResponseDTO(orderEntity);
@@ -60,11 +59,9 @@ public class OrderService {
     }
 
     private void validateSymbol(String symbol) {
-        boolean isValid = Arrays.stream(Order.Symbol.values())
-                .map(Order.Symbol::toString)
-                .filter(s -> s.equals(symbol))
-                .count() == 1;
-        if (!isValid) {
+        try {
+            Order.Symbol.valueOf(symbol);
+        } catch (IllegalArgumentException ignored) {
             throw new InvalidSymbolException(symbol);
         }
     }
@@ -75,13 +72,11 @@ public class OrderService {
         }
     }
 
-    private void validateOrderType(String orderType) {
-        boolean isValid = Arrays.stream(Order.Type.values())
-                .map(Order.Type::toString)
-                .filter(s -> s.equals(orderType))
-                .count() == 1;
-        if (!isValid) {
-            throw new InvalidOrderTypeException(orderType);
+    private void validateOrderType(String type) {
+        try {
+            Order.Type.valueOf(type);
+        } catch (IllegalArgumentException ignored) {
+            throw new InvalidOrderTypeException(type);
         }
     }
 
