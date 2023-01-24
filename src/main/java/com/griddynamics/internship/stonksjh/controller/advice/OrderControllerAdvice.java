@@ -20,12 +20,6 @@ public class OrderControllerAdvice {
         return ApiExceptionDTO.of(e.getMessage());
     }
 
-    @ExceptionHandler(NoSuchMethodException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiExceptionDTO handleNoSuchMethodException(Exception e) {
-        return ApiExceptionDTO.of(e.getMessage());
-    }
-
     @ExceptionHandler({
             InvalidStockAmountException.class,
             InvalidSymbolException.class,
