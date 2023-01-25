@@ -14,13 +14,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/orders")
+@RequestMapping("api/users/{userUuid}/orders")
 @RequiredArgsConstructor
 public class OrderController {
 
@@ -30,35 +29,43 @@ public class OrderController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> create(@RequestBody OrderRequestDTO orderRequestDTO, @RequestParam UUID userUuid) {
-        val orderDTO = crudService.create(orderRequestDTO, userUuid);
+    public ResponseEntity<?> create(@PathVariable UUID userUuid, @RequestBody OrderRequestDTO orderRequestDTO) {
+        val orderDTO = crudService.create(userUuid, orderRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(orderDTO);
     }
 
     @GetMapping(
-            value = "/{uuid}",
+            value = "{orderUuid}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> read(@PathVariable UUID uuid) {
-        val readOrderDto = crudService.read(uuid);
+    public ResponseEntity<?> read(@PathVariable UUID userUuid, @PathVariable UUID orderUuid) {
+        val readOrderDto = crudService.read(userUuid, orderUuid);
         return ResponseEntity.ok(readOrderDto);
     }
 
+    @GetMapping(
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<?> read(@PathVariable UUID userUuid) {
+        return ResponseEntity.ok(crudService.read(userUuid));
+    }
+
     @PutMapping(
-            value = "/{uuid}",
+            value = "{orderUuid}",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> update(@PathVariable UUID uuid, @RequestBody OrderRequestDTO orderRequestDTO) {
-        val updatedOrderDTO = crudService.update(uuid, orderRequestDTO);
+    public ResponseEntity<?> update(@PathVariable UUID userUuid, @PathVariable UUID orderUuid,
+            @RequestBody OrderRequestDTO orderRequestDTO) {
+        val updatedOrderDTO = crudService.update(userUuid, orderUuid, orderRequestDTO);
         return ResponseEntity.ok(updatedOrderDTO);
     }
 
     @DeleteMapping(
-            value = "/{uuid}"
+            value = "{orderUuid}"
     )
-    public ResponseEntity<?> delete(@PathVariable UUID uuid) {
-        crudService.delete(uuid);
+    public ResponseEntity<?> delete(@PathVariable UUID userUuid, @PathVariable UUID orderUuid) {
+        crudService.delete(userUuid, orderUuid);
         return ResponseEntity.ok(null);
     }
 

@@ -16,6 +16,7 @@ import com.griddynamics.internship.stonksjh.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,7 +27,8 @@ public class OrderService {
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
 
-    public OrderResponseDTO create(OrderRequestDTO orderRequestDTO, UUID ownerUuid) {
+    public OrderResponseDTO create(UUID ownerUuid, OrderRequestDTO orderRequestDTO) {
+        validateIfOwnerExists(ownerUuid);
         validateRequestDTO(orderRequestDTO);
         Order orderEntity = orderMapper.requestDtoToEntity(orderRequestDTO);
         User owner = userRepository.findByUuid(ownerUuid)
@@ -37,15 +39,24 @@ public class OrderService {
         return orderMapper.entityToResponseDTO(orderEntity);
     }
 
-    public OrderResponseDTO read(UUID uuid) {
-        Order orderEntity = orderRepository.findByUuid(uuid)
-                .orElseThrow(() -> new OrderNotFoundException(uuid));
+    public OrderResponseDTO read(UUID ownerUuid, UUID orderUuid) {
+        validateIfOwnerExists(ownerUuid);
+        Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
+                .orElseThrow(() -> new OrderNotFoundException(orderUuid));
         return orderMapper.entityToResponseDTO(orderEntity);
     }
 
-    public OrderResponseDTO update(UUID uuid, OrderRequestDTO orderRequestDTO) {
-        Order orderEntity = orderRepository.findByUuid(uuid)
-                .orElseThrow(() -> new OrderNotFoundException(uuid));
+    public List<OrderResponseDTO> read(UUID ownerUuid) {
+        validateIfOwnerExists(ownerUuid);
+        return orderRepository.findAllByOwnerUuid(ownerUuid).stream()
+                .map(orderMapper::entityToResponseDTO)
+                .toList();
+    }
+
+    public OrderResponseDTO update(UUID ownerUuid, UUID orderUuid, OrderRequestDTO orderRequestDTO) {
+        validateIfOwnerExists(ownerUuid);
+        Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
+                .orElseThrow(() -> new OrderNotFoundException(orderUuid));
         validateRequestDTO(orderRequestDTO);
         orderEntity.setAmount(orderRequestDTO.amount());
         orderEntity.setSymbol(Order.Symbol.valueOf(orderRequestDTO.symbol()));
@@ -54,10 +65,17 @@ public class OrderService {
         return orderMapper.entityToResponseDTO(orderEntity);
     }
 
-    public void delete(UUID uuid) {
-        Order orderEntity = orderRepository.findByUuid(uuid)
-                .orElseThrow(() -> new OrderNotFoundException(uuid));
+    public void delete(UUID ownerUuid, UUID orderUuid) {
+        validateIfOwnerExists(ownerUuid);
+        Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
+                .orElseThrow(() -> new OrderNotFoundException(orderUuid));
         orderRepository.delete(orderEntity);
+    }
+
+    private void validateIfOwnerExists(UUID ownerUuid) {
+        if (!userRepository.existsByUuid(ownerUuid)) {
+            throw new UserNotFoundException(ownerUuid);
+        }
     }
 
     private void validateRequestDTO(OrderRequestDTO orderRequestDTO) {
