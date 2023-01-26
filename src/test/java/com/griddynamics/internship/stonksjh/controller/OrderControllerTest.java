@@ -8,6 +8,7 @@ import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeExce
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.exception.order.OrderNotFoundException;
+import com.griddynamics.internship.stonksjh.exception.user.UserNotFoundException;
 import com.griddynamics.internship.stonksjh.model.Order;
 import com.griddynamics.internship.stonksjh.service.OrderService;
 import lombok.SneakyThrows;
@@ -27,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.text.MatchesPattern.matchesPattern;
@@ -181,13 +183,41 @@ public class OrderControllerTest {
                     .create(OWNER_UUID, orderRequestDTO);
         }
 
+        @Test
+        @SneakyThrows
+        void create_shouldReturnNotFound_whenOwnerDoesNotExist() {
+            val requestBody = OrderRequestDTO.builder()
+                    .amount(1)
+                    .symbol(Order.Symbol.AAPL.toString())
+                    .type(Order.Type.BUY.toString())
+                    .build();
+
+            when(ORDER_SERVICE.create(OWNER_UUID, requestBody))
+                    .thenThrow(new UserNotFoundException(OWNER_UUID));
+
+            MVC.perform(MockMvcRequestBuilders
+                            .post(linkTo(createMethod, OWNER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
+                            .contentType(MediaType.APPLICATION_JSON_VALUE)
+                            .accept(MediaType.APPLICATION_JSON_VALUE)
+                    )
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").isNotEmpty())
+                    .andExpect(jsonPath("$.timestamp").isNotEmpty());
+
+            verify(ORDER_SERVICE)
+                    .create(OWNER_UUID, requestBody);
+        }
+
     }
 
     @Nested
     class Read {
 
-        private final Method readMethod = OrderController.class
+        private final Method readOneMethod = OrderController.class
                 .getMethod("read", UUID.class, UUID.class);
+        private final Method readAllMethod = OrderController.class
+                .getMethod("read", UUID.class);
 
         Read() throws NoSuchMethodException {
         }
@@ -213,7 +243,7 @@ public class OrderControllerTest {
                     );
 
             MVC.perform(MockMvcRequestBuilders
-                            .get(linkTo(readMethod, OWNER_UUID, ORDER_UUID).toUri())
+                            .get(linkTo(readOneMethod, OWNER_UUID, ORDER_UUID).toUri())
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
                     .andExpect(status().isOk())
@@ -234,7 +264,7 @@ public class OrderControllerTest {
                     + "Invalid UUID string: " + uuidString;
 
             MVC.perform(MockMvcRequestBuilders
-                            .get(linkTo(readMethod, OWNER_UUID, uuidString).toUri())
+                            .get(linkTo(readOneMethod, OWNER_UUID, uuidString).toUri())
                     )
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message", matchesPattern(".*" + expectedExceptionMessage + ".*")))
@@ -250,7 +280,7 @@ public class OrderControllerTest {
             val expectedExceptionMessage = String.format("No order with UUID = %s exists", ORDER_UUID);
 
             MVC.perform(MockMvcRequestBuilders
-                            .get(linkTo(readMethod, OWNER_UUID, ORDER_UUID).toUri())
+                            .get(linkTo(readOneMethod, OWNER_UUID, ORDER_UUID).toUri())
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
                     .andExpect(status().isNotFound())
@@ -260,6 +290,67 @@ public class OrderControllerTest {
             verify(ORDER_SERVICE)
                     .read(OWNER_UUID, ORDER_UUID);
         }
+
+        @Test
+        @SneakyThrows
+        void readAll_shouldReturnEmptyList_whenUserHadNoOrders() {
+            when(ORDER_SERVICE.read(OWNER_UUID))
+                    .thenReturn(List.of());
+
+            MVC.perform(MockMvcRequestBuilders
+                            .get(linkTo(readAllMethod, OWNER_UUID).toUri())
+                            .accept(MediaType.APPLICATION_JSON_VALUE)
+                    )
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$").isEmpty());
+
+            verify(ORDER_SERVICE)
+                    .read(OWNER_UUID);
+        }
+
+        @Test
+        @SneakyThrows
+        void readAll_shouldReturnNonEmptyList_whenUserHadOrders() {
+            val expectedResponse = OrderResponseDTO.builder()
+                    .amount(1)
+                    .symbol(Order.Symbol.AAPL)
+                    .type(Order.Type.BUY)
+                    .build();
+            when(ORDER_SERVICE.read(OWNER_UUID))
+                    .thenReturn(List.of(expectedResponse));
+
+            MVC.perform(MockMvcRequestBuilders
+                            .get(linkTo(readAllMethod, OWNER_UUID).toUri())
+                            .accept(MediaType.APPLICATION_JSON_VALUE)
+                    )
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$").isNotEmpty())
+                    .andExpect(jsonPath("$[0].amount").value(expectedResponse.amount()))
+                    .andExpect(jsonPath("$[0].symbol").value(expectedResponse.symbol().toString()))
+                    .andExpect(jsonPath("$[0].type").value(expectedResponse.type().toString()));
+
+            verify(ORDER_SERVICE)
+                    .read(OWNER_UUID);
+        }
+
+        @Test
+        @SneakyThrows
+        void readAll_shouldReturnNotFound_whenOwnerDoesNotExist() {
+            when(ORDER_SERVICE.read(OWNER_UUID))
+                    .thenThrow(new UserNotFoundException(OWNER_UUID));
+
+            MVC.perform(MockMvcRequestBuilders
+                            .get(linkTo(readAllMethod, OWNER_UUID).toUri())
+                            .accept(MediaType.APPLICATION_JSON_VALUE)
+                    )
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").isNotEmpty())
+                    .andExpect(jsonPath("$.timestamp").isNotEmpty());
+
+            verify(ORDER_SERVICE)
+                    .read(OWNER_UUID);
+        }
+
     }
 
     @Nested
