@@ -52,7 +52,6 @@ public class User {
             nullable = false,
             columnDefinition = "Decimal(10,2) default '0.00'"
     )
-    @Setter(AccessLevel.NONE)
     @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
 

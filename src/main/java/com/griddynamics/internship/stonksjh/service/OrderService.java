@@ -27,6 +27,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final BrokerService brokerService;
 
     public OrderResponseDTO create(UUID ownerUuid, OrderCreateRequestDTO orderCreateRequestDTO) {
         validateIfOwnerExists(ownerUuid);
@@ -36,6 +37,11 @@ public class OrderService {
                 .orElseThrow(() -> new UserNotFoundException(ownerUuid));
         orderEntity.setUuid(UUID.randomUUID());
         orderEntity.setOwner(owner);
+
+        // TODO change when orderes are processed, maybe separate endpoint
+        // It may require adding to order a Status field (PENDING, COMPLETE)
+        brokerService.processOrder(orderEntity);
+
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToResponseDTO(orderEntity);
     }

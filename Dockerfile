@@ -7,4 +7,6 @@ RUN gradle bootJar
 # Using corretto instead of openjdk due to deprecation notice
 FROM amazoncorretto:17-alpine
 COPY --from=build /home/gradle/src/build/libs/*.jar ./app.jar
+# Finnhub API token
+COPY token.txt ./token.txt
 ENTRYPOINT ["java", "-jar", "./app.jar"]
