@@ -1,16 +1,19 @@
 package com.griddynamics.internship.stonksjh.service;
 
 import com.griddynamics.internship.stonksjh.dto.order.OrderRequestDTO;
-import com.griddynamics.internship.stonksjh.dto.order.OrderResponseDTO;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.exception.order.OrderNotFoundException;
+import com.griddynamics.internship.stonksjh.exception.user.UserNotFoundException;
 import com.griddynamics.internship.stonksjh.mapper.OrderMapper;
 import com.griddynamics.internship.stonksjh.model.Order;
+import com.griddynamics.internship.stonksjh.model.User;
 import com.griddynamics.internship.stonksjh.repository.OrderRepository;
+import com.griddynamics.internship.stonksjh.repository.UserRepository;
 import lombok.val;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -22,13 +25,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatList;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,17 +43,62 @@ import static org.mockito.Mockito.when;
 public class OrderServiceTest {
 
     private final OrderMapper orderMapper = Mappers.getMapper(OrderMapper.class);
-    private final UUID VALID_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
-    private final OrderResponseDTO PREDEFINED_ORDER = new OrderResponseDTO(VALID_UUID, Order.Type.BUY, 1, Order.Symbol.AAPL);
+    private final UUID ORDER_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    private final UUID OWNER_UUID = UUID.fromString("a1d82886-3f7f-41dc-9cb2-d16de3d2d287");
+    private User PREDEFINED_USER;
+    private Order PREDEFINED_ORDER;
     @MockBean
     private OrderRepository ORDER_REPOSITORY;
     @MockBean
+    private UserRepository USER_REPOSITORY;
+    @MockBean
     private OrderMapper INJECTED_MAPPER;
-    private OrderService orderService;
+    private OrderService ORDER_SERVICE;
 
     @BeforeAll
     void initOrderService() {
-        orderService = new OrderService(ORDER_REPOSITORY, INJECTED_MAPPER);
+        ORDER_SERVICE = new OrderService(
+                ORDER_REPOSITORY,
+                USER_REPOSITORY,
+                INJECTED_MAPPER
+        );
+    }
+
+    @BeforeAll
+    void initPredefinedUser() {
+        PREDEFINED_USER = User.builder()
+                .uuid(OWNER_UUID)
+                .username("user")
+                .email("user@example.com")
+                .build();
+    }
+
+    @BeforeAll
+    void initPredefinedOrder() {
+        PREDEFINED_ORDER = Order.builder()
+                .amount(1)
+                .symbol(Order.Symbol.AAPL)
+                .type(Order.Type.BUY)
+                .owner(PREDEFINED_USER)
+                .build();
+    }
+
+    @BeforeEach
+    void setupOwnerExistence() {
+        when(USER_REPOSITORY.existsByUuid(OWNER_UUID))
+                .thenReturn(true);
+        when(USER_REPOSITORY.findByUuid(OWNER_UUID))
+                .thenReturn(Optional.of(PREDEFINED_USER));
+    }
+
+    private UUID randomInvalidUUID() {
+        var randomUUID = UUID.randomUUID();
+        // keep re-rolling if we hit the valid one
+        while (randomUUID.equals(OWNER_UUID)) {
+            randomUUID = UUID.randomUUID();
+        }
+
+        return randomUUID;
     }
 
     @Nested
@@ -69,7 +120,7 @@ public class OrderServiceTest {
             when(ORDER_REPOSITORY.save(any(Order.class)))
                     .thenAnswer(i -> i.getArguments()[0]);
 
-            val result = orderService.create(orderRequestDTO);
+            val result = ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO);
             System.err.printf("%d, %s, %s\n%n", result.amount(), result.symbol(), result.type());
 
             assertThat(result.amount())
@@ -94,7 +145,7 @@ public class OrderServiceTest {
                     .build();
 
             assertThatExceptionOfType(InvalidOrderTypeException.class)
-                    .isThrownBy(() -> orderService.create(orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO));
         }
 
         @ParameterizedTest(name = "{index}: amount={0}")
@@ -107,7 +158,7 @@ public class OrderServiceTest {
                     .build();
 
             assertThatExceptionOfType(InvalidSymbolException.class)
-                    .isThrownBy(() -> orderService.create(orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO));
         }
 
         @ParameterizedTest(name = "{index}: amount={0}")
@@ -120,7 +171,7 @@ public class OrderServiceTest {
                     .build();
 
             assertThatExceptionOfType(InvalidStockAmountException.class)
-                    .isThrownBy(() -> orderService.create(orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO));
         }
 
     }
@@ -130,33 +181,72 @@ public class OrderServiceTest {
 
         @Test
         void readOneOrder_OrderExists_ShouldReturnOrderDTO() {
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
-                    .thenReturn(Optional.of(orderMapper.dtoToEntity(PREDEFINED_ORDER)));
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
+                    .thenReturn(Optional.of(PREDEFINED_ORDER));
             when(INJECTED_MAPPER.entityToResponseDTO(any(Order.class)))
                     .thenAnswer(i -> orderMapper.entityToResponseDTO((Order) i.getArguments()[0]));
 
-            val result = orderService.read(PREDEFINED_ORDER.uuid());
+            val result = ORDER_SERVICE.read(OWNER_UUID, ORDER_UUID);
 
             assertThat(result.amount())
-                    .isEqualTo(PREDEFINED_ORDER.amount());
+                    .isEqualTo(PREDEFINED_ORDER.getAmount());
             assertThat(result.symbol())
-                    .isEqualTo(PREDEFINED_ORDER.symbol());
+                    .isEqualTo(PREDEFINED_ORDER.getSymbol());
             assertThat(result.type())
-                    .isEqualTo(PREDEFINED_ORDER.type());
+                    .isEqualTo(PREDEFINED_ORDER.getType());
 
-            verify(ORDER_REPOSITORY).findByUuid(PREDEFINED_ORDER.uuid());
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
             verify(INJECTED_MAPPER).entityToResponseDTO(any(Order.class));
         }
 
         @Test
         void readOneOrder_NoOrderWithGivenUuidExists_ShouldThrow() {
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
                     .thenReturn(Optional.empty());
 
             assertThatExceptionOfType(OrderNotFoundException.class)
-                    .isThrownBy(() -> orderService.read(VALID_UUID));
+                    .isThrownBy(() -> ORDER_SERVICE.read(OWNER_UUID, ORDER_UUID));
 
-            verify(ORDER_REPOSITORY).findByUuid(PREDEFINED_ORDER.uuid());
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
+        }
+
+        @Test
+        void readOne_shouldThrow_whenOwnerDoesNotExist() {
+            assertThatExceptionOfType(UserNotFoundException.class)
+                    .isThrownBy(() -> ORDER_SERVICE.read(randomInvalidUUID(), ORDER_UUID));
+        }
+
+        @Test
+        void readAll_shouldReturnEmptyList_whenUserHasNoOrders() {
+            when(ORDER_REPOSITORY.findAllByOwnerUuid(OWNER_UUID))
+                    .thenReturn(List.of());
+
+            assertThatNoException()
+                    .isThrownBy(() -> ORDER_SERVICE.read(OWNER_UUID));
+            assertThat(ORDER_SERVICE.read(OWNER_UUID))
+                    .isEmpty();
+
+            verify(ORDER_REPOSITORY, times(2))
+                    .findAllByOwnerUuid(OWNER_UUID);
+        }
+
+        @Test
+        void readAll_shouldReturnNonEmptyList_whenUserHasOrders() {
+            when(ORDER_REPOSITORY.findAllByOwnerUuid(OWNER_UUID))
+                    .thenReturn(List.of(PREDEFINED_ORDER));
+            when(INJECTED_MAPPER.entityToResponseDTO(PREDEFINED_ORDER))
+                    .thenReturn(orderMapper.entityToResponseDTO(PREDEFINED_ORDER));
+
+            assertThatNoException()
+                    .isThrownBy(() -> ORDER_SERVICE.read(OWNER_UUID));
+            val result = ORDER_SERVICE.read(OWNER_UUID);
+            assertThatList(result)
+                    .isNotEmpty();
+            assertThatList(result)
+                    .isEqualTo(List.of(orderMapper.entityToResponseDTO(PREDEFINED_ORDER)));
+
+            verify(ORDER_REPOSITORY, times(2))
+                    .findAllByOwnerUuid(OWNER_UUID);
         }
 
     }
@@ -175,12 +265,12 @@ public class OrderServiceTest {
 
             when(INJECTED_MAPPER.entityToResponseDTO(any(Order.class)))
                     .thenAnswer(i -> orderMapper.entityToResponseDTO((Order) i.getArguments()[0]));
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
-                    .thenReturn(Optional.of(orderMapper.dtoToEntity(PREDEFINED_ORDER)));
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
+                    .thenReturn(Optional.of(PREDEFINED_ORDER));
             when(ORDER_REPOSITORY.save(any(Order.class)))
                     .thenAnswer(i -> i.getArguments()[0]);
 
-            val result = orderService.update(PREDEFINED_ORDER.uuid(), orderRequestDTO);
+            val result = ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO);
 
             assertThat(result.amount())
                     .isEqualTo(orderRequestDTO.amount());
@@ -190,21 +280,21 @@ public class OrderServiceTest {
                     .isEqualTo(Order.Type.valueOf(orderRequestDTO.type()));
 
             verify(INJECTED_MAPPER).entityToResponseDTO(any(Order.class));
-            verify(ORDER_REPOSITORY).findByUuid(PREDEFINED_ORDER.uuid());
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
             verify(ORDER_REPOSITORY).save(any(Order.class));
         }
 
         @Test
         void updateOrder_NoOrderWithGivenUuidExists_ShouldThrow() {
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
                     .thenReturn(Optional.empty());
 
             assertThatExceptionOfType(OrderNotFoundException.class)
                     .isThrownBy(
-                            () -> orderService.update(PREDEFINED_ORDER.uuid(), OrderRequestDTO.builder().build())
+                            () -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, OrderRequestDTO.builder().build())
                     );
 
-            verify(ORDER_REPOSITORY).findByUuid(VALID_UUID);
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
         @ParameterizedTest(name = "{index}: symbol={0}")
@@ -216,13 +306,13 @@ public class OrderServiceTest {
                     .type("BUY")
                     .build();
 
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
-                    .thenReturn(Optional.of(orderMapper.dtoToEntity(PREDEFINED_ORDER)));
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
+                    .thenReturn(Optional.of(PREDEFINED_ORDER));
 
             assertThatExceptionOfType(InvalidSymbolException.class)
-                    .isThrownBy(() -> orderService.update(PREDEFINED_ORDER.uuid(), orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO));
 
-            verify(ORDER_REPOSITORY).findByUuid(PREDEFINED_ORDER.uuid());
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
         @ParameterizedTest(name = "{index}: type={0}")
@@ -234,13 +324,13 @@ public class OrderServiceTest {
                     .type(type)
                     .build();
 
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
-                    .thenReturn(Optional.of(orderMapper.dtoToEntity(PREDEFINED_ORDER)));
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
+                    .thenReturn(Optional.of(PREDEFINED_ORDER));
 
             assertThatExceptionOfType(InvalidOrderTypeException.class)
-                    .isThrownBy(() -> orderService.update(PREDEFINED_ORDER.uuid(), orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO));
 
-            verify(ORDER_REPOSITORY).findByUuid(PREDEFINED_ORDER.uuid());
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
         @ParameterizedTest(name = "{index}: amount={0}")
@@ -252,13 +342,13 @@ public class OrderServiceTest {
                     .type("BUY")
                     .build();
 
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
-                    .thenReturn(Optional.of(orderMapper.dtoToEntity(PREDEFINED_ORDER)));
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
+                    .thenReturn(Optional.of(PREDEFINED_ORDER));
 
             assertThatExceptionOfType(InvalidStockAmountException.class)
-                    .isThrownBy(() -> orderService.update(PREDEFINED_ORDER.uuid(), orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO));
 
-            verify(ORDER_REPOSITORY).findByUuid(PREDEFINED_ORDER.uuid());
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
     }
@@ -268,24 +358,24 @@ public class OrderServiceTest {
 
         @Test
         void deleteOrder_OrderExists_ShouldDeleteOrderCorrectly() {
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
-                    .thenReturn(Optional.of(orderMapper.dtoToEntity(PREDEFINED_ORDER)));
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
+                    .thenReturn(Optional.of(PREDEFINED_ORDER));
 
             assertThatNoException()
-                    .isThrownBy(() -> orderService.delete(PREDEFINED_ORDER.uuid()));
+                    .isThrownBy(() -> ORDER_SERVICE.delete(OWNER_UUID, ORDER_UUID));
 
-            verify(ORDER_REPOSITORY).findByUuid(PREDEFINED_ORDER.uuid());
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
         @Test
         void deleteOrder_NoOrderWithGivenUuidExists_ShouldThrow() {
-            when(ORDER_REPOSITORY.findByUuid(any(UUID.class)))
+            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
                     .thenReturn(Optional.empty());
 
             assertThatExceptionOfType(OrderNotFoundException.class)
-                    .isThrownBy(() -> orderService.delete(PREDEFINED_ORDER.uuid()));
+                    .isThrownBy(() -> ORDER_SERVICE.delete(OWNER_UUID, ORDER_UUID));
 
-            verify(ORDER_REPOSITORY).findByUuid(PREDEFINED_ORDER.uuid());
+            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
     }
