@@ -1,9 +1,9 @@
 package com.griddynamics.internship.stonksjh.controller;
 
-import com.griddynamics.internship.stonksjh.dto.order.OrderRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderCreateRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderUpdateRequestDTO;
 import com.griddynamics.internship.stonksjh.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +29,8 @@ public class OrderController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> create(@PathVariable UUID userUuid, @RequestBody OrderRequestDTO orderRequestDTO) {
-        val orderDTO = crudService.create(userUuid, orderRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(orderDTO);
+    public ResponseEntity<?> create(@PathVariable UUID userUuid, @RequestBody OrderCreateRequestDTO orderCreateRequestDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(crudService.create(userUuid, orderCreateRequestDTO));
     }
 
     @GetMapping(
@@ -39,8 +38,7 @@ public class OrderController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> read(@PathVariable UUID userUuid, @PathVariable UUID orderUuid) {
-        val readOrderDto = crudService.read(userUuid, orderUuid);
-        return ResponseEntity.ok(readOrderDto);
+        return ResponseEntity.ok(crudService.read(userUuid, orderUuid));
     }
 
     @GetMapping(
@@ -56,9 +54,8 @@ public class OrderController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> update(@PathVariable UUID userUuid, @PathVariable UUID orderUuid,
-            @RequestBody OrderRequestDTO orderRequestDTO) {
-        val updatedOrderDTO = crudService.update(userUuid, orderUuid, orderRequestDTO);
-        return ResponseEntity.ok(updatedOrderDTO);
+            @RequestBody OrderUpdateRequestDTO orderUpdateRequestDTO) {
+        return ResponseEntity.ok(crudService.update(userUuid, orderUuid, orderUpdateRequestDTO));
     }
 
     @DeleteMapping(

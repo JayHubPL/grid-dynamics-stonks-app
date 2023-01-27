@@ -1,7 +1,8 @@
 package com.griddynamics.internship.stonksjh.service;
 
-import com.griddynamics.internship.stonksjh.dto.order.OrderRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderCreateRequestDTO;
 import com.griddynamics.internship.stonksjh.dto.order.OrderResponseDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderUpdateRequestDTO;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
@@ -27,10 +28,10 @@ public class OrderService {
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
 
-    public OrderResponseDTO create(UUID ownerUuid, OrderRequestDTO orderRequestDTO) {
+    public OrderResponseDTO create(UUID ownerUuid, OrderCreateRequestDTO orderCreateRequestDTO) {
         validateIfOwnerExists(ownerUuid);
-        validateRequestDTO(orderRequestDTO);
-        Order orderEntity = orderMapper.requestDtoToEntity(orderRequestDTO);
+        validateCreateRequestDTO(orderCreateRequestDTO);
+        Order orderEntity = orderMapper.createRequestDtoToEntity(orderCreateRequestDTO);
         User owner = userRepository.findByUuid(ownerUuid)
                 .orElseThrow(() -> new UserNotFoundException(ownerUuid));
         orderEntity.setUuid(UUID.randomUUID());
@@ -53,14 +54,13 @@ public class OrderService {
                 .toList();
     }
 
-    public OrderResponseDTO update(UUID ownerUuid, UUID orderUuid, OrderRequestDTO orderRequestDTO) {
+    public OrderResponseDTO update(UUID ownerUuid, UUID orderUuid, OrderUpdateRequestDTO orderUpdateRequestDTO) {
         validateIfOwnerExists(ownerUuid);
+        validateUpdateRequestDTO(orderUpdateRequestDTO);
         Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
                 .orElseThrow(() -> new OrderNotFoundException(orderUuid));
-        validateRequestDTO(orderRequestDTO);
-        orderEntity.setAmount(orderRequestDTO.amount());
-        orderEntity.setSymbol(Order.Symbol.valueOf(orderRequestDTO.symbol()));
-        orderEntity.setType(Order.Type.valueOf(orderRequestDTO.type()));
+        orderEntity.setAmount(orderUpdateRequestDTO.amount());
+        orderEntity.setSymbol(Order.Symbol.valueOf(orderUpdateRequestDTO.symbol()));
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToResponseDTO(orderEntity);
     }
@@ -72,13 +72,18 @@ public class OrderService {
         orderRepository.delete(orderEntity);
     }
 
+    private void validateUpdateRequestDTO(OrderUpdateRequestDTO orderUpdateRequestDTO) {
+        validateAmount(orderUpdateRequestDTO.amount());
+        validateSymbol(orderUpdateRequestDTO.symbol());
+    }
+
     private void validateIfOwnerExists(UUID ownerUuid) {
         if (!userRepository.existsByUuid(ownerUuid)) {
             throw new UserNotFoundException(ownerUuid);
         }
     }
 
-    private void validateRequestDTO(OrderRequestDTO orderRequestDTO) {
+    private void validateCreateRequestDTO(OrderCreateRequestDTO orderRequestDTO) {
         validateAmount(orderRequestDTO.amount());
         validateSymbol(orderRequestDTO.symbol());
         validateOrderType(orderRequestDTO.type());

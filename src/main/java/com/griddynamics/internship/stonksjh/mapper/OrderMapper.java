@@ -1,6 +1,6 @@
 package com.griddynamics.internship.stonksjh.mapper;
 
-import com.griddynamics.internship.stonksjh.dto.order.OrderRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderCreateRequestDTO;
 import com.griddynamics.internship.stonksjh.dto.order.OrderResponseDTO;
 import com.griddynamics.internship.stonksjh.model.Order;
 import org.mapstruct.Mapper;
@@ -18,6 +18,6 @@ public interface OrderMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uuid", ignore = true)
     @Mapping(target = "owner", ignore = true)
-    Order requestDtoToEntity(OrderRequestDTO orderRequestDTO);
+    Order createRequestDtoToEntity(OrderCreateRequestDTO orderCreateRequestDTO);
 
 }
