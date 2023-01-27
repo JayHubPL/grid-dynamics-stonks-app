@@ -257,22 +257,6 @@ public class OrderControllerTest {
                     .read(OWNER_UUID, ORDER_UUID);
         }
 
-        // TODO - this test is redundant, as it tests built in functionality, not our logic
-        @Test
-        @SneakyThrows
-        void readOne_UuidIsOfInvalidFormat_ShouldReturnBadRequest() {
-            val uuidString = "aaa";
-            val expectedExceptionMessage = "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'; "
-                    + "Invalid UUID string: " + uuidString;
-
-            MVC.perform(MockMvcRequestBuilders
-                            .get(linkTo(readOneMethod, OWNER_UUID, uuidString).toUri())
-                    )
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message", matchesPattern(".*" + expectedExceptionMessage + ".*")))
-                    .andExpect(jsonPath("$.timestamp").isNotEmpty());
-        }
-
         @Test
         @SneakyThrows
         void readOne_NoOrderWithGivenUuidExists_ShouldReturnNotFound() {
