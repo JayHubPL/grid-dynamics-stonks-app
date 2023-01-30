@@ -1,6 +1,7 @@
 package com.griddynamics.internship.stonksjh.controller;
 
 import com.griddynamics.internship.stonksjh.dto.order.OrderCreateRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderResponseDTO;
 import com.griddynamics.internship.stonksjh.dto.order.OrderUpdateRequestDTO;
 import com.griddynamics.internship.stonksjh.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,7 +31,7 @@ public class OrderController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> create(@PathVariable UUID userUuid, @RequestBody OrderCreateRequestDTO orderCreateRequestDTO) {
+    public ResponseEntity<OrderResponseDTO> create(@PathVariable UUID userUuid, @RequestBody OrderCreateRequestDTO orderCreateRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(crudService.create(userUuid, orderCreateRequestDTO));
     }
 
@@ -37,14 +39,14 @@ public class OrderController {
             value = "{orderUuid}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> read(@PathVariable UUID userUuid, @PathVariable UUID orderUuid) {
+    public ResponseEntity<OrderResponseDTO> read(@PathVariable UUID userUuid, @PathVariable UUID orderUuid) {
         return ResponseEntity.ok(crudService.read(userUuid, orderUuid));
     }
 
     @GetMapping(
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> read(@PathVariable UUID userUuid) {
+    public ResponseEntity<List<OrderResponseDTO>> read(@PathVariable UUID userUuid) {
         return ResponseEntity.ok(crudService.read(userUuid));
     }
 
@@ -53,8 +55,8 @@ public class OrderController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<?> update(@PathVariable UUID userUuid, @PathVariable UUID orderUuid,
-            @RequestBody OrderUpdateRequestDTO orderUpdateRequestDTO) {
+    public ResponseEntity<OrderResponseDTO> update(@PathVariable UUID userUuid, @PathVariable UUID orderUuid,
+                                                   @RequestBody OrderUpdateRequestDTO orderUpdateRequestDTO) {
         return ResponseEntity.ok(crudService.update(userUuid, orderUuid, orderUpdateRequestDTO));
     }
 
