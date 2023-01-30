@@ -2,8 +2,9 @@ package com.griddynamics.internship.stonksjh.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.griddynamics.internship.stonksjh.dto.order.OrderRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderCreateRequestDTO;
 import com.griddynamics.internship.stonksjh.dto.order.OrderResponseDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderUpdateRequestDTO;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
@@ -52,9 +53,9 @@ public class OrderControllerTest {
     @Autowired
     private MockMvc MVC;
 
-    private String jsonString(OrderRequestDTO orderRequestDTO) {
+    private String jsonString(Object obj) {
         try {
-            return new ObjectMapper().writeValueAsString(orderRequestDTO);
+            return new ObjectMapper().writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error converting UserDTO to json", e);
         }
@@ -64,7 +65,7 @@ public class OrderControllerTest {
     class Create {
 
         private final Method createMethod = OrderController.class
-                .getMethod("create", UUID.class, OrderRequestDTO.class);
+                .getMethod("create", UUID.class, OrderCreateRequestDTO.class);
 
         Create() throws NoSuchMethodException {
         }
@@ -73,25 +74,25 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#validOrderData")
         @SneakyThrows
         void create_OrderDataIsValid_ShouldReturnCreatedResponse(int amount, String symbol, String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val requestBody = OrderCreateRequestDTO.builder()
                     .amount(amount)
                     .symbol(symbol)
                     .type(type)
                     .build();
 
-            when(ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO))
+            when(ORDER_SERVICE.create(OWNER_UUID, requestBody))
                     .thenReturn(
                             OrderResponseDTO.builder()
                                     .uuid(ORDER_UUID)
-                                    .amount(orderRequestDTO.amount())
-                                    .symbol(Order.Symbol.valueOf(orderRequestDTO.symbol()))
-                                    .type(Order.Type.valueOf(orderRequestDTO.type()))
+                                    .amount(requestBody.amount())
+                                    .symbol(Order.Symbol.valueOf(requestBody.symbol()))
+                                    .type(Order.Type.valueOf(requestBody.type()))
                                     .build()
                     );
 
             MVC.perform(MockMvcRequestBuilders
-                            .post(linkTo(createMethod, OWNER_UUID, orderRequestDTO).toUri())
-                            .content(jsonString(orderRequestDTO))
+                            .post(linkTo(createMethod, OWNER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON)
                     )
@@ -99,25 +100,25 @@ public class OrderControllerTest {
                     .andExpect(jsonPath("$.uuid").value(ORDER_UUID.toString()));
 
             verify(ORDER_SERVICE)
-                    .create(OWNER_UUID, orderRequestDTO);
+                    .create(OWNER_UUID, requestBody);
         }
 
         @ParameterizedTest(name = "{index}: amount={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidAmounts")
         @SneakyThrows
         void create_OrderStockAmountIsInvalid_ShouldReturnBadResponse(int amount) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val requestBody = OrderCreateRequestDTO.builder()
                     .amount(amount)
                     .symbol("AAPL")
                     .type("BUY")
                     .build();
 
-            when(ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO))
+            when(ORDER_SERVICE.create(OWNER_UUID, requestBody))
                     .thenThrow(new InvalidStockAmountException(amount));
 
             MVC.perform(MockMvcRequestBuilders
-                            .post(linkTo(createMethod, OWNER_UUID, orderRequestDTO).toUri())
-                            .content(jsonString(orderRequestDTO))
+                            .post(linkTo(createMethod, OWNER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
                             .contentType(MediaType.APPLICATION_JSON_VALUE)
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
@@ -126,25 +127,25 @@ public class OrderControllerTest {
                     .andExpect(jsonPath("$.timestamp").isNotEmpty());
 
             verify(ORDER_SERVICE)
-                    .create(OWNER_UUID, orderRequestDTO);
+                    .create(OWNER_UUID, requestBody);
         }
 
         @ParameterizedTest(name = "{index}: type={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         @SneakyThrows
         void create_OrderSymbolIsInvalid_ShouldReturnBadResponse(String symbol) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val requestBody = OrderCreateRequestDTO.builder()
                     .amount(1)
                     .symbol(symbol)
                     .type("BUY")
                     .build();
 
-            when(ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO))
+            when(ORDER_SERVICE.create(OWNER_UUID, requestBody))
                     .thenThrow(new InvalidSymbolException(symbol));
 
             MVC.perform(MockMvcRequestBuilders
-                            .post(linkTo(createMethod, OWNER_UUID, orderRequestDTO).toUri())
-                            .content(jsonString(orderRequestDTO))
+                            .post(linkTo(createMethod, OWNER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
                             .contentType(MediaType.APPLICATION_JSON_VALUE)
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
@@ -153,25 +154,25 @@ public class OrderControllerTest {
                     .andExpect(jsonPath("$.timestamp").isNotEmpty());
 
             verify(ORDER_SERVICE)
-                    .create(OWNER_UUID, orderRequestDTO);
+                    .create(OWNER_UUID, requestBody);
         }
 
         @ParameterizedTest(name = "{index}: type={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         @SneakyThrows
         void create_OrderTypeIsInvalid_ShouldReturnBadResponse(String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val requestBody = OrderCreateRequestDTO.builder()
                     .amount(1)
                     .symbol("AAPL")
                     .type(type)
                     .build();
 
-            when(ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO))
+            when(ORDER_SERVICE.create(OWNER_UUID, requestBody))
                     .thenThrow(new InvalidOrderTypeException(type));
 
             MVC.perform(MockMvcRequestBuilders
-                            .post(linkTo(createMethod, OWNER_UUID, orderRequestDTO).toUri())
-                            .content(jsonString(orderRequestDTO))
+                            .post(linkTo(createMethod, OWNER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
                             .contentType(MediaType.APPLICATION_JSON_VALUE)
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
@@ -180,13 +181,13 @@ public class OrderControllerTest {
                     .andExpect(jsonPath("$.timestamp").isNotEmpty());
 
             verify(ORDER_SERVICE)
-                    .create(OWNER_UUID, orderRequestDTO);
+                    .create(OWNER_UUID, requestBody);
         }
 
         @Test
         @SneakyThrows
         void create_shouldReturnNotFound_whenOwnerDoesNotExist() {
-            val requestBody = OrderRequestDTO.builder()
+            val requestBody = OrderCreateRequestDTO.builder()
                     .amount(1)
                     .symbol(Order.Symbol.AAPL.toString())
                     .type(Order.Type.BUY.toString())
@@ -226,19 +227,19 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#validOrderData")
         @SneakyThrows
         void readOne_OrderExists_ShouldReturnOkResponse(int amount, String symbol, String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val expectedResponse = OrderResponseDTO.builder()
                     .amount(amount)
-                    .symbol(symbol)
-                    .type(type)
+                    .symbol(Order.Symbol.valueOf(symbol))
+                    .type(Order.Type.valueOf(type))
                     .build();
 
             when(ORDER_SERVICE.read(OWNER_UUID, ORDER_UUID))
                     .thenReturn(
                             OrderResponseDTO.builder()
                                     .uuid(ORDER_UUID)
-                                    .type(Order.Type.valueOf(orderRequestDTO.type()))
-                                    .amount(orderRequestDTO.amount())
-                                    .symbol(Order.Symbol.valueOf(orderRequestDTO.symbol()))
+                                    .type(expectedResponse.type())
+                                    .amount(expectedResponse.amount())
+                                    .symbol(expectedResponse.symbol())
                                     .build()
                     );
 
@@ -247,28 +248,13 @@ public class OrderControllerTest {
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.amount").value(orderRequestDTO.amount()))
-                    .andExpect(jsonPath("$.type").value(orderRequestDTO.type()))
-                    .andExpect(jsonPath("$.symbol").value(orderRequestDTO.symbol()))
+                    .andExpect(jsonPath("$.amount").value(expectedResponse.amount()))
+                    .andExpect(jsonPath("$.type").value(expectedResponse.type().toString()))
+                    .andExpect(jsonPath("$.symbol").value(expectedResponse.symbol().toString()))
                     .andExpect(jsonPath("$.uuid").value(ORDER_UUID.toString()));
 
             verify(ORDER_SERVICE)
                     .read(OWNER_UUID, ORDER_UUID);
-        }
-
-        @Test
-        @SneakyThrows
-        void readOne_UuidIsOfInvalidFormat_ShouldReturnBadRequest() {
-            val uuidString = "aaa";
-            val expectedExceptionMessage = "Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'; "
-                    + "Invalid UUID string: " + uuidString;
-
-            MVC.perform(MockMvcRequestBuilders
-                            .get(linkTo(readOneMethod, OWNER_UUID, uuidString).toUri())
-                    )
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message", matchesPattern(".*" + expectedExceptionMessage + ".*")))
-                    .andExpect(jsonPath("$.timestamp").isNotEmpty());
         }
 
         @Test
@@ -316,6 +302,7 @@ public class OrderControllerTest {
                     .symbol(Order.Symbol.AAPL)
                     .type(Order.Type.BUY)
                     .build();
+
             when(ORDER_SERVICE.read(OWNER_UUID))
                     .thenReturn(List.of(expectedResponse));
 
@@ -357,7 +344,7 @@ public class OrderControllerTest {
     class Update {
 
         private final Method updateMethod = OrderController.class
-                .getMethod("update", UUID.class, UUID.class, OrderRequestDTO.class);
+                .getMethod("update", UUID.class, UUID.class, OrderUpdateRequestDTO.class);
 
         Update() throws NoSuchMethodException {
         }
@@ -366,53 +353,50 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#validOrderData")
         @SneakyThrows
         void update_OrderDataIsValid_ShouldReturnOkResponse(int amount, String symbol, String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val requestBody = OrderUpdateRequestDTO.builder()
                     .amount(amount)
                     .symbol(symbol)
-                    .type(type)
                     .build();
 
-            when(ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO))
+            when(ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, requestBody))
                     .thenReturn(
                             OrderResponseDTO.builder()
                                     .uuid(ORDER_UUID)
-                                    .type(Order.Type.valueOf(orderRequestDTO.type()))
-                                    .amount(orderRequestDTO.amount())
-                                    .symbol(Order.Symbol.valueOf(orderRequestDTO.symbol()))
+                                    .amount(requestBody.amount())
+                                    .symbol(Order.Symbol.valueOf(requestBody.symbol()))
                                     .build()
                     );
 
             MVC.perform(MockMvcRequestBuilders
-                            .put(linkTo(updateMethod, OWNER_UUID, ORDER_UUID, orderRequestDTO).toUri())
-                            .content(jsonString(orderRequestDTO))
+                            .put(linkTo(updateMethod, OWNER_UUID, ORDER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
                             .contentType(MediaType.APPLICATION_JSON_VALUE)
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.amount").value(orderRequestDTO.amount()))
-                    .andExpect(jsonPath("$.symbol").value(orderRequestDTO.symbol()))
+                    .andExpect(jsonPath("$.amount").value(requestBody.amount()))
+                    .andExpect(jsonPath("$.symbol").value(requestBody.symbol()))
                     .andExpect(jsonPath("$.uuid").value(ORDER_UUID.toString()));
 
             verify(ORDER_SERVICE)
-                    .update(OWNER_UUID, ORDER_UUID, orderRequestDTO);
+                    .update(OWNER_UUID, ORDER_UUID, requestBody);
         }
 
         @ParameterizedTest(name = "{index}: amount={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidAmounts")
         @SneakyThrows
         void update_OrderStockAmountIsInvalid_ShouldReturnBadRequest(int amount) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val requestBody = OrderUpdateRequestDTO.builder()
                     .amount(amount)
                     .symbol("AAPL")
-                    .type("BUY")
                     .build();
 
-            when(ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO))
+            when(ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, requestBody))
                     .thenThrow(new InvalidStockAmountException(amount));
 
             MVC.perform(MockMvcRequestBuilders
-                            .put(linkTo(updateMethod, OWNER_UUID, ORDER_UUID, orderRequestDTO).toUri())
-                            .content(jsonString(orderRequestDTO))
+                            .put(linkTo(updateMethod, OWNER_UUID, ORDER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
                             .contentType(MediaType.APPLICATION_JSON_VALUE)
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
@@ -421,25 +405,24 @@ public class OrderControllerTest {
                     .andExpect(jsonPath("$.timestamp").isNotEmpty());
 
             verify(ORDER_SERVICE)
-                    .update(OWNER_UUID, ORDER_UUID, orderRequestDTO);
+                    .update(OWNER_UUID, ORDER_UUID, requestBody);
         }
 
         @ParameterizedTest(name = "{index}: symbol={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         @SneakyThrows
         void update_OrderSymbolIsInvalid_ShouldReturnBadRequest(String symbol) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val requestBody = OrderUpdateRequestDTO.builder()
                     .amount(1)
                     .symbol(symbol)
-                    .type("BUY")
                     .build();
 
-            when(ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO))
+            when(ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, requestBody))
                     .thenThrow(new InvalidSymbolException(symbol));
 
             MVC.perform(MockMvcRequestBuilders
-                            .put(linkTo(updateMethod, OWNER_UUID, ORDER_UUID, orderRequestDTO).toUri())
-                            .content(jsonString(orderRequestDTO))
+                            .put(linkTo(updateMethod, OWNER_UUID, ORDER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
                             .contentType(MediaType.APPLICATION_JSON_VALUE)
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
@@ -448,25 +431,24 @@ public class OrderControllerTest {
                     .andExpect(jsonPath("$.timestamp").isNotEmpty());
 
             verify(ORDER_SERVICE)
-                    .update(OWNER_UUID, ORDER_UUID, orderRequestDTO);
+                    .update(OWNER_UUID, ORDER_UUID, requestBody);
         }
 
         @ParameterizedTest(name = "{index}: type={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         @SneakyThrows
         void update_OrderTypeIsInvalid_ShouldReturnBadRequest(String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val requestBody = OrderUpdateRequestDTO.builder()
                     .amount(1)
                     .symbol("AAPL")
-                    .type(type)
                     .build();
 
-            when(ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO))
+            when(ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, requestBody))
                     .thenThrow(new InvalidOrderTypeException(type));
 
             MVC.perform(MockMvcRequestBuilders
-                            .put(linkTo(updateMethod, OWNER_UUID, ORDER_UUID, orderRequestDTO).toUri())
-                            .content(jsonString(orderRequestDTO))
+                            .put(linkTo(updateMethod, OWNER_UUID, ORDER_UUID, requestBody).toUri())
+                            .content(jsonString(requestBody))
                             .contentType(MediaType.APPLICATION_JSON_VALUE)
                             .accept(MediaType.APPLICATION_JSON_VALUE)
                     )
@@ -475,7 +457,7 @@ public class OrderControllerTest {
                     .andExpect(jsonPath("$.timestamp").isNotEmpty());
 
             verify(ORDER_SERVICE)
-                    .update(OWNER_UUID, ORDER_UUID, orderRequestDTO);
+                    .update(OWNER_UUID, ORDER_UUID, requestBody);
         }
 
     }
