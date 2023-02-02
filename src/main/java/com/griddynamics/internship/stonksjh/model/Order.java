@@ -1,5 +1,6 @@
 package com.griddynamics.internship.stonksjh.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -61,7 +62,7 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal bid;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(
             nullable = false,
             updatable = false

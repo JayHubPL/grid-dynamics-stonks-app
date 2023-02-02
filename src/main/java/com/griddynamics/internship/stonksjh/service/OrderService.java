@@ -30,9 +30,9 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final BrokerService brokerService;
 
     public OrderResponseDTO create(UUID ownerUuid, OrderCreateRequestDTO orderCreateRequestDTO) {
-        validateIfOwnerExists(ownerUuid);
         validateCreateRequestDTO(orderCreateRequestDTO);
         Order orderEntity = orderMapper.createRequestDtoToEntity(orderCreateRequestDTO);
         User owner = userRepository.findByUuid(ownerUuid)
@@ -40,6 +40,7 @@ public class OrderService {
         orderEntity.setUuid(UUID.randomUUID());
         orderEntity.setStatus(Order.Status.PENDING);
         orderEntity.setOwner(owner);
+        brokerService.checkIfOrderCanBePlaced(orderEntity);
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToResponseDTO(orderEntity);
     }
@@ -64,6 +65,8 @@ public class OrderService {
         Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
                 .orElseThrow(() -> new OrderNotFoundException(orderUuid));
         validateOrderStatus(orderEntity);
+        // TODO validate bid and symbol, they can make order invalid in terms of balance and owned stocks
+        // TODO consider removing the ability to modify orders, or just stick to the amount
         orderEntity.setAmount(orderUpdateRequestDTO.amount());
         orderEntity.setSymbol(Order.Symbol.valueOf(orderUpdateRequestDTO.symbol()));
         orderEntity = orderRepository.save(orderEntity);
