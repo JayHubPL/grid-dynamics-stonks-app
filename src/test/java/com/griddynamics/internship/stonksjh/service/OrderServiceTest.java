@@ -1,6 +1,7 @@
 package com.griddynamics.internship.stonksjh.service;
 
-import com.griddynamics.internship.stonksjh.dto.order.OrderRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderCreateRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderUpdateRequestDTO;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
@@ -53,6 +54,8 @@ public class OrderServiceTest {
     private UserRepository USER_REPOSITORY;
     @MockBean
     private OrderMapper INJECTED_MAPPER;
+    @MockBean
+    private BrokerService BROKER_SERVICE;
     private OrderService ORDER_SERVICE;
 
     @BeforeAll
@@ -60,7 +63,8 @@ public class OrderServiceTest {
         ORDER_SERVICE = new OrderService(
                 ORDER_REPOSITORY,
                 USER_REPOSITORY,
-                INJECTED_MAPPER
+                INJECTED_MAPPER,
+                BROKER_SERVICE
         );
     }
 
@@ -107,14 +111,14 @@ public class OrderServiceTest {
         @ParameterizedTest(name = "{index}: orderData=[{0},{1},{2}]")
         @MethodSource("util.OrderFlowTestDataFactory#validOrderData")
         void create_OrderDataIsValid_ShouldCreateOrderCorrectly(int amount, String symbol, String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(amount)
                     .symbol(symbol)
                     .type(type)
                     .build();
 
-            when(INJECTED_MAPPER.requestDtoToEntity(orderRequestDTO))
-                    .thenReturn(orderMapper.requestDtoToEntity(orderRequestDTO));
+            when(INJECTED_MAPPER.createRequestDtoToEntity(orderRequestDTO))
+                    .thenReturn(orderMapper.createRequestDtoToEntity(orderRequestDTO));
             when(INJECTED_MAPPER.entityToResponseDTO(any(Order.class)))
                     .thenAnswer(i -> orderMapper.entityToResponseDTO((Order) i.getArguments()[0]));
             when(ORDER_REPOSITORY.save(any(Order.class)))
@@ -130,7 +134,7 @@ public class OrderServiceTest {
             assertThat(result.type())
                     .isEqualTo(Order.Type.valueOf(orderRequestDTO.type()));
 
-            verify(INJECTED_MAPPER).requestDtoToEntity(orderRequestDTO);
+            verify(INJECTED_MAPPER).createRequestDtoToEntity(orderRequestDTO);
             verify(INJECTED_MAPPER).entityToResponseDTO(any(Order.class));
             verify(ORDER_REPOSITORY).save(any(Order.class));
         }
@@ -138,7 +142,7 @@ public class OrderServiceTest {
         @ParameterizedTest(name = "{index}: amount={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         void create_OrderTypeIsInvalid_ShouldThrow(String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(1)
                     .symbol("AAPL")
                     .type(type)
@@ -151,7 +155,7 @@ public class OrderServiceTest {
         @ParameterizedTest(name = "{index}: amount={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         void create_OrderSymbolIsInvalid_ShouldThrow(String symbol) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(1)
                     .symbol(symbol)
                     .type("BUY")
@@ -164,7 +168,7 @@ public class OrderServiceTest {
         @ParameterizedTest(name = "{index}: amount={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidAmounts")
         void create_OrderStockAmountIsInvalid_ShouldThrow(int amount) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(amount)
                     .symbol("AAPL")
                     .type("BUY")
@@ -257,10 +261,9 @@ public class OrderServiceTest {
         @ParameterizedTest(name = "{index}: orderData=[{0},{1},{2}]")
         @MethodSource("util.OrderFlowTestDataFactory#validOrderData")
         void updateOrder_OrderDataIsValidAndOrderExists_ShouldUpdateOrderCorrectly(int amount, String symbol, String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val orderRequestDTO = OrderUpdateRequestDTO.builder()
                     .amount(amount)
                     .symbol(symbol)
-                    .type(type)
                     .build();
 
             when(INJECTED_MAPPER.entityToResponseDTO(any(Order.class)))
@@ -276,8 +279,6 @@ public class OrderServiceTest {
                     .isEqualTo(orderRequestDTO.amount());
             assertThat(result.symbol())
                     .isEqualTo(Order.Symbol.valueOf(orderRequestDTO.symbol()));
-            assertThat(result.type())
-                    .isEqualTo(Order.Type.valueOf(orderRequestDTO.type()));
 
             verify(INJECTED_MAPPER).entityToResponseDTO(any(Order.class));
             verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
@@ -289,10 +290,13 @@ public class OrderServiceTest {
             when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
                     .thenReturn(Optional.empty());
 
+            val orderRequestDTO = OrderUpdateRequestDTO.builder()
+                    .amount(1)
+                    .symbol("AAPL")
+                    .build();
+
             assertThatExceptionOfType(OrderNotFoundException.class)
-                    .isThrownBy(
-                            () -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, OrderRequestDTO.builder().build())
-                    );
+                    .isThrownBy(() -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO));
 
             verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
@@ -300,55 +304,25 @@ public class OrderServiceTest {
         @ParameterizedTest(name = "{index}: symbol={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         void updateOrder_OrderSymbolIsInvalid_ShouldThrow(String symbol) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val orderRequestDTO = OrderUpdateRequestDTO.builder()
                     .amount(1)
                     .symbol(symbol)
-                    .type("BUY")
                     .build();
-
-            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
-                    .thenReturn(Optional.of(PREDEFINED_ORDER));
 
             assertThatExceptionOfType(InvalidSymbolException.class)
                     .isThrownBy(() -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO));
-
-            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
-        }
-
-        @ParameterizedTest(name = "{index}: type={0}")
-        @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
-        void updateOrder_OrderTypeIsInvalid_ShouldThrow(String type) {
-            val orderRequestDTO = OrderRequestDTO.builder()
-                    .amount(1)
-                    .symbol("AAPL")
-                    .type(type)
-                    .build();
-
-            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
-                    .thenReturn(Optional.of(PREDEFINED_ORDER));
-
-            assertThatExceptionOfType(InvalidOrderTypeException.class)
-                    .isThrownBy(() -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO));
-
-            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
         @ParameterizedTest(name = "{index}: amount={0}")
         @MethodSource("util.OrderFlowTestDataFactory#invalidAmounts")
         void updateOrder_OrderStockAmountIsInvalid_ShouldThrow(int amount) {
-            val orderRequestDTO = OrderRequestDTO.builder()
+            val orderRequestDTO = OrderUpdateRequestDTO.builder()
                     .amount(amount)
                     .symbol("AAPL")
-                    .type("BUY")
                     .build();
-
-            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
-                    .thenReturn(Optional.of(PREDEFINED_ORDER));
 
             assertThatExceptionOfType(InvalidStockAmountException.class)
                     .isThrownBy(() -> ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO));
-
-            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
     }
