@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
@@ -53,6 +54,13 @@ public class Order {
     @Enumerated(value = EnumType.STRING)
     private Symbol symbol;
 
+    @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING)
+    private Status status;
+
+    @Column(nullable = false)
+    private BigDecimal bid;
+
     @ManyToOne
     @JoinColumn(
             nullable = false,
@@ -74,6 +82,11 @@ public class Order {
         TSLA,
         MSFT,
         JNJ
+    }
+
+    public enum Status {
+        PENDING,
+        COMPLETE
     }
 
 }

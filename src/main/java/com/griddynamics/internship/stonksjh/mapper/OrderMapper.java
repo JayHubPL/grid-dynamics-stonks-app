@@ -14,6 +14,7 @@ public interface OrderMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uuid", ignore = true)
     @Mapping(target = "owner", ignore = true)
+    @Mapping(target = "status", ignore = true)
     Order createRequestDtoToEntity(OrderCreateRequestDTO orderCreateRequestDTO);
 
 }

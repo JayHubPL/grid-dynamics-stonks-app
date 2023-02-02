@@ -3,6 +3,8 @@ package com.griddynamics.internship.stonksjh.service;
 import com.griddynamics.internship.stonksjh.dto.order.OrderCreateRequestDTO;
 import com.griddynamics.internship.stonksjh.dto.order.OrderResponseDTO;
 import com.griddynamics.internship.stonksjh.dto.order.OrderUpdateRequestDTO;
+import com.griddynamics.internship.stonksjh.exception.order.IllegalOrderOperationException;
+import com.griddynamics.internship.stonksjh.exception.order.InvalidBidException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
@@ -17,6 +19,7 @@ import com.griddynamics.internship.stonksjh.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +30,6 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
-    private final BrokerService brokerService;
 
     public OrderResponseDTO create(UUID ownerUuid, OrderCreateRequestDTO orderCreateRequestDTO) {
         validateIfOwnerExists(ownerUuid);
@@ -36,12 +38,8 @@ public class OrderService {
         User owner = userRepository.findByUuid(ownerUuid)
                 .orElseThrow(() -> new UserNotFoundException(ownerUuid));
         orderEntity.setUuid(UUID.randomUUID());
+        orderEntity.setStatus(Order.Status.PENDING);
         orderEntity.setOwner(owner);
-
-        // TODO change when orderes are processed, maybe separate endpoint
-        // It may require adding to order a Status field (PENDING, COMPLETE)
-        brokerService.processOrder(orderEntity);
-
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToResponseDTO(orderEntity);
     }
@@ -65,6 +63,7 @@ public class OrderService {
         validateUpdateRequestDTO(orderUpdateRequestDTO);
         Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
                 .orElseThrow(() -> new OrderNotFoundException(orderUuid));
+        validateOrderStatus(orderEntity);
         orderEntity.setAmount(orderUpdateRequestDTO.amount());
         orderEntity.setSymbol(Order.Symbol.valueOf(orderUpdateRequestDTO.symbol()));
         orderEntity = orderRepository.save(orderEntity);
@@ -75,12 +74,20 @@ public class OrderService {
         validateIfOwnerExists(ownerUuid);
         Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
                 .orElseThrow(() -> new OrderNotFoundException(orderUuid));
+        validateOrderStatus(orderEntity);
         orderRepository.delete(orderEntity);
+    }
+
+    private void validateOrderStatus(Order order) {
+        if (order.getStatus() == Order.Status.COMPLETE) {
+            throw new IllegalOrderOperationException(order.getUuid());
+        }
     }
 
     private void validateUpdateRequestDTO(OrderUpdateRequestDTO orderUpdateRequestDTO) {
         validateAmount(orderUpdateRequestDTO.amount());
         validateSymbol(orderUpdateRequestDTO.symbol());
+        validateBid(orderUpdateRequestDTO.bid());
     }
 
     private void validateIfOwnerExists(UUID ownerUuid) {
@@ -89,10 +96,17 @@ public class OrderService {
         }
     }
 
-    private void validateCreateRequestDTO(OrderCreateRequestDTO orderRequestDTO) {
-        validateAmount(orderRequestDTO.amount());
-        validateSymbol(orderRequestDTO.symbol());
-        validateOrderType(orderRequestDTO.type());
+    private void validateCreateRequestDTO(OrderCreateRequestDTO orderCreateRequestDTO) {
+        validateAmount(orderCreateRequestDTO.amount());
+        validateSymbol(orderCreateRequestDTO.symbol());
+        validateOrderType(orderCreateRequestDTO.type());
+        validateBid(orderCreateRequestDTO.bid());
+    }
+
+    private void validateBid(BigDecimal bid) {
+        if (bid.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidBidException(bid);
+        }
     }
 
     private void validateSymbol(String symbol) {
