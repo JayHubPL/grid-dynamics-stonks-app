@@ -2,12 +2,12 @@ package com.griddynamics.internship.stonksjh.controller.advice;
 
 import com.griddynamics.internship.stonksjh.controller.OrderController;
 import com.griddynamics.internship.stonksjh.exception.ApiExceptionDTO;
+import com.griddynamics.internship.stonksjh.exception.broker.InsufficientBalanceException;
+import com.griddynamics.internship.stonksjh.exception.broker.InsufficientStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.exception.order.OrderNotFoundException;
-import com.griddynamics.internship.stonksjh.exception.trading.InsufficientBalanceException;
-import com.griddynamics.internship.stonksjh.exception.trading.InsufficientStockAmountException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;

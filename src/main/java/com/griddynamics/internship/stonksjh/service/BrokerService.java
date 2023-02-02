@@ -16,9 +16,9 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.griddynamics.internship.stonksjh.exception.trading.InsufficientBalanceException;
-import com.griddynamics.internship.stonksjh.exception.trading.InsufficientStockAmountException;
-import com.griddynamics.internship.stonksjh.exception.trading.MissingFinnhubApiTokenException;
+import com.griddynamics.internship.stonksjh.exception.broker.InsufficientBalanceException;
+import com.griddynamics.internship.stonksjh.exception.broker.InsufficientStockAmountException;
+import com.griddynamics.internship.stonksjh.exception.broker.MissingFinnhubApiTokenException;
 import com.griddynamics.internship.stonksjh.model.Order;
 import com.griddynamics.internship.stonksjh.model.User;
 import com.griddynamics.internship.stonksjh.repository.OrderRepository;

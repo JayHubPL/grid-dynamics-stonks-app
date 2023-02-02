@@ -1,4 +1,4 @@
-package com.griddynamics.internship.stonksjh.exception.trading;
+package com.griddynamics.internship.stonksjh.exception.broker;
 
 import com.griddynamics.internship.stonksjh.model.Order;
 
