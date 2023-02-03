@@ -9,6 +9,7 @@ import com.griddynamics.internship.stonksjh.model.User;
 import com.griddynamics.internship.stonksjh.properties.FinnhubProperties;
 import com.griddynamics.internship.stonksjh.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +42,8 @@ public class BrokerService {
                     throw new InsufficientBalanceException(orderValue, owner.getBalance());
                 }
                 orderValue = orderValue.negate();
+                val stocks = owner.getStocks();
+                stocks.merge(order.getSymbol(), order.getAmount(), Integer::sum);
             }
             case SELL -> {
                 long stockCount = orderRepository.findAllByOwnerUuidAndSymbol(owner.getUuid(), order.getSymbol()).stream()
@@ -49,6 +52,11 @@ public class BrokerService {
                 if (order.getAmount() > stockCount) {
                     throw new InsufficientStockAmountException(order.getAmount(), order.getSymbol(), stockCount);
                 }
+                val stocks = owner.getStocks();
+                if (order.getAmount() > stocks.get(order.getSymbol())) {
+                    throw new InsufficientStockAmountException(order.getAmount(), order.getSymbol(), stocks.get(order.getSymbol()));
+                }
+                stocks.computeIfPresent(order.getSymbol(), (k, v) -> v - order.getAmount());
             }
         }
         owner.setBalance(owner.getBalance().add(orderValue));

@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -54,5 +55,7 @@ public class User {
     )
     @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
+
+    private Map<Order.Symbol, Integer> stocks;
 
 }
