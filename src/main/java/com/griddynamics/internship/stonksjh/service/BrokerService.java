@@ -8,7 +8,6 @@ import com.griddynamics.internship.stonksjh.model.Order;
 import com.griddynamics.internship.stonksjh.model.User;
 import com.griddynamics.internship.stonksjh.properties.FinnhubProperties;
 import com.griddynamics.internship.stonksjh.repository.OrderRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,16 +21,21 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 
 @Service
-@RequiredArgsConstructor
 public class BrokerService {
 
-    private static final String FINNHUB_TOKEN_HEADER = "X-Finnhub-Token";
-    private static final String FINNHUB_API_QUOTE_ENDPOINT = "https://finnhub.io/api/v1/quote?symbol=%s";
+    private static final String ENDPOINT_SUFFIX = "?symbol=%s";
     private static final BigDecimal COMMISSION_MULTIPLIER = new BigDecimal("1.07"); // 7% commission
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private final HttpClient HTTP_CLIENT;
+    private final ObjectMapper OBJECT_MAPPER;
     private final FinnhubProperties finnhubProperties;
     private final OrderRepository orderRepository;
+
+    public BrokerService(FinnhubProperties finnhubProperties, OrderRepository orderRepository) {
+        this.HTTP_CLIENT = HttpClient.newHttpClient();
+        this.OBJECT_MAPPER = new ObjectMapper();
+        this.finnhubProperties = finnhubProperties;
+        this.orderRepository = orderRepository;
+    }
 
     public void processOrder(Order order) {
         BigDecimal orderValue = evaluateOrderValue(order);
@@ -68,12 +72,13 @@ public class BrokerService {
     }
 
     private BigDecimal getStockPrice(Order.Symbol symbol) {
+        val endpoint = finnhubProperties.apiUrl() + ENDPOINT_SUFFIX;
         try {
-            URI uri = URI.create(String.format(FINNHUB_API_QUOTE_ENDPOINT, symbol.toString()));
+            URI uri = URI.create(String.format(endpoint, symbol.toString()));
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
                     .uri(uri)
-                    .header(FINNHUB_TOKEN_HEADER, finnhubProperties.apiKey())
+                    .header(finnhubProperties.tokenHeader(), finnhubProperties.apiKey())
                     .build();
             HttpResponse<String> response = HTTP_CLIENT.send(request, BodyHandlers.ofString());
             if (response.statusCode() != HttpStatus.OK.value()) {

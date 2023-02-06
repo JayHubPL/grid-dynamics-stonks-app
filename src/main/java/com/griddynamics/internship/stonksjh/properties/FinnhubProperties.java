@@ -4,6 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "finnhub")
 public record FinnhubProperties(
+        String apiUrl,
+        String tokenHeader,
         String apiKey
 ) {
 }
