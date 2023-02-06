@@ -1,5 +1,6 @@
 package com.griddynamics.internship.stonksjh.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.griddynamics.internship.stonksjh.exception.trading.InsufficientBalanceException;
@@ -7,7 +8,7 @@ import com.griddynamics.internship.stonksjh.exception.trading.InsufficientStockA
 import com.griddynamics.internship.stonksjh.model.Order;
 import com.griddynamics.internship.stonksjh.model.User;
 import com.griddynamics.internship.stonksjh.properties.FinnhubProperties;
-import com.griddynamics.internship.stonksjh.repository.OrderRepository;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,20 +22,19 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 
 @Service
+@Slf4j
 public class BrokerService {
 
     private static final String ENDPOINT_SUFFIX = "?symbol=%s";
     private static final BigDecimal COMMISSION_MULTIPLIER = new BigDecimal("1.07"); // 7% commission
-    private final HttpClient HTTP_CLIENT;
-    private final ObjectMapper OBJECT_MAPPER;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
     private final FinnhubProperties finnhubProperties;
-    private final OrderRepository orderRepository;
 
-    public BrokerService(FinnhubProperties finnhubProperties, OrderRepository orderRepository) {
-        this.HTTP_CLIENT = HttpClient.newHttpClient();
-        this.OBJECT_MAPPER = new ObjectMapper();
+    public BrokerService(FinnhubProperties finnhubProperties) {
+        this.httpClient = HttpClient.newHttpClient();
+        this.objectMapper = new ObjectMapper();
         this.finnhubProperties = finnhubProperties;
-        this.orderRepository = orderRepository;
     }
 
     public void processOrder(Order order) {
@@ -50,12 +50,6 @@ public class BrokerService {
                 stocks.merge(order.getSymbol(), order.getAmount(), Integer::sum);
             }
             case SELL -> {
-                long stockCount = orderRepository.findAllByOwnerUuidAndSymbol(owner.getUuid(), order.getSymbol()).stream()
-                        .mapToLong(o -> o.getAmount() * (o.getType() == Order.Type.BUY ? 1 : -1))
-                        .sum();
-                if (order.getAmount() > stockCount) {
-                    throw new InsufficientStockAmountException(order.getAmount(), order.getSymbol(), stockCount);
-                }
                 val stocks = owner.getStocks();
                 if (order.getAmount() > stocks.get(order.getSymbol())) {
                     throw new InsufficientStockAmountException(order.getAmount(), order.getSymbol(), stocks.get(order.getSymbol()));
@@ -80,13 +74,20 @@ public class BrokerService {
                     .uri(uri)
                     .header(finnhubProperties.tokenHeader(), finnhubProperties.apiKey())
                     .build();
-            HttpResponse<String> response = HTTP_CLIENT.send(request, BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, BodyHandlers.ofString());
             if (response.statusCode() != HttpStatus.OK.value()) {
                 throw new RuntimeException("Got response with the status code " + HttpStatus.valueOf(response.statusCode()));
             }
-            return new BigDecimal(OBJECT_MAPPER.readValue(response.body(), ObjectNode.class).get("c").asText());
+
+            return new BigDecimal(objectMapper.readValue(response.body(), ObjectNode.class).get("c").asText());
+        } catch (JsonProcessingException e) {
+            val msg = "Failed to parse response from finnhub.io";
+            log.error(msg);
+            throw new RuntimeException(msg, e);
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to send a request");
+            val msg = "Failed to send a request to finnhub.io";
+            log.error(msg);
+            throw new RuntimeException(msg, e);
         }
     }
 
