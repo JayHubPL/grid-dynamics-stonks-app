@@ -53,12 +53,9 @@ class UserServiceTest {
     private UserResponseDTO PREDEFINED_USER;
 
     @BeforeAll
-    void initUserService() {
+    void setup() {
         CRUD_SERVICE = new UserService(USR_REPOSITORY, INJECTED_MAPPER);
-    }
 
-    @BeforeAll
-    void initPredefinedUser() {
         PREDEFINED_USER = UserResponseDTO.builder()
                 .uuid(UUID.fromString(PREDEFINED_UUID))
                 .email("user@example.com")

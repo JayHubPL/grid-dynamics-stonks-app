@@ -57,25 +57,19 @@ public class OrderServiceTest {
     private OrderService ORDER_SERVICE;
 
     @BeforeAll
-    void initOrderService() {
+    void setup() {
         ORDER_SERVICE = new OrderService(
                 ORDER_REPOSITORY,
                 USER_REPOSITORY,
                 INJECTED_MAPPER
         );
-    }
 
-    @BeforeAll
-    void initPredefinedUser() {
         PREDEFINED_USER = User.builder()
                 .uuid(OWNER_UUID)
                 .username("user")
                 .email("user@example.com")
                 .build();
-    }
 
-    @BeforeAll
-    void initPredefinedOrder() {
         PREDEFINED_ORDER = Order.builder()
                 .amount(1)
                 .symbol(Order.Symbol.AAPL)
