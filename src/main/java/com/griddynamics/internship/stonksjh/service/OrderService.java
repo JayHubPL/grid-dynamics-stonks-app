@@ -1,26 +1,17 @@
 package com.griddynamics.internship.stonksjh.service;
 
-import com.griddynamics.internship.stonksjh.dto.order.OrderCreateRequestDTO;
+import com.griddynamics.internship.stonksjh.dto.order.OrderRequestDTO;
 import com.griddynamics.internship.stonksjh.dto.order.OrderResponseDTO;
-import com.griddynamics.internship.stonksjh.dto.order.OrderUpdateRequestDTO;
-import com.griddynamics.internship.stonksjh.exception.order.IllegalOrderOperationException;
-import com.griddynamics.internship.stonksjh.exception.order.InvalidBidException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.exception.order.OrderNotFoundException;
-import com.griddynamics.internship.stonksjh.exception.user.UserNotFoundException;
 import com.griddynamics.internship.stonksjh.mapper.OrderMapper;
 import com.griddynamics.internship.stonksjh.model.Order;
-import com.griddynamics.internship.stonksjh.model.User;
 import com.griddynamics.internship.stonksjh.repository.OrderRepository;
-import com.griddynamics.internship.stonksjh.repository.UserRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,88 +19,43 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
     private final OrderMapper orderMapper;
-    private final BrokerService brokerService;
 
-    public OrderResponseDTO create(UUID ownerUuid, OrderCreateRequestDTO orderCreateRequestDTO) {
-        validateCreateRequestDTO(orderCreateRequestDTO);
-        Order orderEntity = orderMapper.createRequestDtoToEntity(orderCreateRequestDTO);
-        User owner = userRepository.findByUuid(ownerUuid)
-                .orElseThrow(() -> new UserNotFoundException(ownerUuid));
+    public OrderResponseDTO create(OrderRequestDTO orderRequestDTO) {
+        validateRequestDTO(orderRequestDTO);
+        Order orderEntity = orderMapper.requestDtoToEntity(orderRequestDTO);
         orderEntity.setUuid(UUID.randomUUID());
-        orderEntity.setStatus(Order.Status.PENDING);
-        orderEntity.setOwner(owner);
-        brokerService.checkIfOrderCanBePlaced(orderEntity);
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToResponseDTO(orderEntity);
     }
 
-    public OrderResponseDTO read(UUID ownerUuid, UUID orderUuid) {
-        validateIfOwnerExists(ownerUuid);
-        Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
-                .orElseThrow(() -> new OrderNotFoundException(orderUuid));
+    public OrderResponseDTO read(UUID uuid) {
+        Order orderEntity = orderRepository.findByUUID(uuid)
+                .orElseThrow(() -> new OrderNotFoundException(uuid));
         return orderMapper.entityToResponseDTO(orderEntity);
     }
 
-    public List<OrderResponseDTO> read(UUID ownerUuid) {
-        validateIfOwnerExists(ownerUuid);
-        return orderRepository.findAllByOwnerUuid(ownerUuid).stream()
-                .map(orderMapper::entityToResponseDTO)
-                .toList();
-    }
-
-    public OrderResponseDTO update(UUID ownerUuid, UUID orderUuid, OrderUpdateRequestDTO orderUpdateRequestDTO) {
-        validateIfOwnerExists(ownerUuid);
-        validateUpdateRequestDTO(orderUpdateRequestDTO);
-        Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
-                .orElseThrow(() -> new OrderNotFoundException(orderUuid));
-        validateOrderStatus(orderEntity);
-        // TODO validate bid and symbol, they can make order invalid in terms of balance and owned stocks
-        // TODO consider removing the ability to modify orders, or just stick to the amount
-        orderEntity.setAmount(orderUpdateRequestDTO.amount());
-        orderEntity.setSymbol(Order.Symbol.valueOf(orderUpdateRequestDTO.symbol()));
+    public OrderResponseDTO update(UUID uuid, OrderRequestDTO orderRequestDTO) {
+        Order orderEntity = orderRepository.findByUUID(uuid)
+                .orElseThrow(() -> new OrderNotFoundException(uuid));
+        validateRequestDTO(orderRequestDTO);
+        orderEntity.setAmount(orderRequestDTO.amount());
+        orderEntity.setSymbol(Order.Symbol.valueOf(orderRequestDTO.symbol()));
+        orderEntity.setType(Order.Type.valueOf(orderRequestDTO.type()));
         orderEntity = orderRepository.save(orderEntity);
         return orderMapper.entityToResponseDTO(orderEntity);
     }
 
-    public void delete(UUID ownerUuid, UUID orderUuid) {
-        validateIfOwnerExists(ownerUuid);
-        Order orderEntity = orderRepository.findByUuidAndOwnerUuid(orderUuid, ownerUuid)
-                .orElseThrow(() -> new OrderNotFoundException(orderUuid));
-        validateOrderStatus(orderEntity);
+    public void delete(UUID uuid) {
+        Order orderEntity = orderRepository.findByUUID(uuid)
+                .orElseThrow(() -> new OrderNotFoundException(uuid));
         orderRepository.delete(orderEntity);
     }
 
-    private void validateOrderStatus(Order order) {
-        if (order.getStatus() == Order.Status.COMPLETE) {
-            throw new IllegalOrderOperationException(order.getUuid());
-        }
-    }
-
-    private void validateUpdateRequestDTO(OrderUpdateRequestDTO orderUpdateRequestDTO) {
-        validateAmount(orderUpdateRequestDTO.amount());
-        validateSymbol(orderUpdateRequestDTO.symbol());
-        validateBid(orderUpdateRequestDTO.bid());
-    }
-
-    private void validateIfOwnerExists(UUID ownerUuid) {
-        if (!userRepository.existsByUuid(ownerUuid)) {
-            throw new UserNotFoundException(ownerUuid);
-        }
-    }
-
-    private void validateCreateRequestDTO(OrderCreateRequestDTO orderCreateRequestDTO) {
-        validateAmount(orderCreateRequestDTO.amount());
-        validateSymbol(orderCreateRequestDTO.symbol());
-        validateOrderType(orderCreateRequestDTO.type());
-        validateBid(orderCreateRequestDTO.bid());
-    }
-
-    private void validateBid(BigDecimal bid) {
-        if (bid.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidBidException(bid);
-        }
+    private void validateRequestDTO(OrderRequestDTO orderRequestDTO) {
+        validateAmount(orderRequestDTO.amount());
+        validateSymbol(orderRequestDTO.symbol());
+        validateOrderType(orderRequestDTO.type());
     }
 
     private void validateSymbol(String symbol) {

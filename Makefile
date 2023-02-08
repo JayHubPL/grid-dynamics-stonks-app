@@ -1,5 +1,5 @@
 COMPOSE=docker-compose
-COMPOSE_FLAGS=
+COMPOSE_FLAGS=-d
 IMAGES=stonks-jh-app
 
 start:

@@ -2,13 +2,10 @@ package com.griddynamics.internship.stonksjh.controller.advice;
 
 import com.griddynamics.internship.stonksjh.controller.OrderController;
 import com.griddynamics.internship.stonksjh.exception.ApiExceptionDTO;
-import com.griddynamics.internship.stonksjh.exception.broker.InsufficientBalanceException;
-import com.griddynamics.internship.stonksjh.exception.broker.InsufficientStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidOrderTypeException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidStockAmountException;
 import com.griddynamics.internship.stonksjh.exception.order.InvalidSymbolException;
 import com.griddynamics.internship.stonksjh.exception.order.OrderNotFoundException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,13 +20,17 @@ public class OrderControllerAdvice {
         return ApiExceptionDTO.of(e.getMessage());
     }
 
+    @ExceptionHandler(NoSuchMethodException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiExceptionDTO handleNoSuchMethodException(Exception e) {
+        return ApiExceptionDTO.of(e.getMessage());
+    }
+
     @ExceptionHandler({
             InvalidStockAmountException.class,
             InvalidSymbolException.class,
             InvalidOrderTypeException.class,
-            IllegalArgumentException.class,
-            InsufficientBalanceException.class,
-            InsufficientStockAmountException.class
+            IllegalArgumentException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiExceptionDTO handleIllegalArgumentException(Exception e) {
