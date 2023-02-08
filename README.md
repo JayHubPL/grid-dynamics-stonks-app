@@ -28,9 +28,16 @@
 
 ## Running the application
 
-### Requirements
+### Prerequisites
 
-> docker, docker-compose
+Application communicates with [finnhub.io](https://finnhub.io), so you need to register and obtain your api key.\
+Create `finnhub.properties` file in `src/main/resources` with this line:
+
+```properties
+finnhub.api-key=your_key
+```
+
+You're all set - now you just need `docker`, `docker compose` and `make` to run the application.
 
 ### Run
 
