@@ -154,23 +154,11 @@ public class BrokerService {
         }
     }
 
-    private EnumMap<Order.Symbol, BigDecimal> getAllStockPrices() {
+    private Map<Order.Symbol, BigDecimal> getAllStockPrices() {
         return Arrays.stream(Order.Symbol.values())
                 .collect(Collectors.toMap(
                     Function.identity(),
-                    symbol -> {
-                        int tries = 0;
-                        int maxTries = 3;
-                        while (true) {
-                            try {
-                                return getStockPrice(symbol);
-                            } catch (Exception e) {
-                                if (++tries == maxTries) {
-                                    throw e;
-                                }
-                            }
-                        }
-                    },
+                    symbol -> getStockPrice(symbol),
                     (o1, o2) -> {
                         throw new IllegalArgumentException("Key collision"); // this should technically never happen
                     }, 
