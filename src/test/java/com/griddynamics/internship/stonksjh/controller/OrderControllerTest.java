@@ -74,7 +74,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#validOrderData")
         @SneakyThrows
         void create_OrderDataIsValid_ShouldReturnCreatedResponse(int amount, String symbol, String type) {
-            val requestBody = OrderCreateRequestDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(amount)
                     .symbol(symbol)
                     .type(type)
@@ -107,7 +107,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#invalidAmounts")
         @SneakyThrows
         void create_OrderStockAmountIsInvalid_ShouldReturnBadResponse(int amount) {
-            val requestBody = OrderCreateRequestDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(amount)
                     .symbol("AAPL")
                     .type("BUY")
@@ -134,7 +134,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         @SneakyThrows
         void create_OrderSymbolIsInvalid_ShouldReturnBadResponse(String symbol) {
-            val requestBody = OrderCreateRequestDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(1)
                     .symbol(symbol)
                     .type("BUY")
@@ -161,7 +161,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         @SneakyThrows
         void create_OrderTypeIsInvalid_ShouldReturnBadResponse(String type) {
-            val requestBody = OrderCreateRequestDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(1)
                     .symbol("AAPL")
                     .type(type)
@@ -227,7 +227,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#validOrderData")
         @SneakyThrows
         void readOne_OrderExists_ShouldReturnOkResponse(int amount, String symbol, String type) {
-            val expectedResponse = OrderResponseDTO.builder()
+            val orderRequestDTO = OrderCreateRequestDTO.builder()
                     .amount(amount)
                     .symbol(Order.Symbol.valueOf(symbol))
                     .type(Order.Type.valueOf(type))
@@ -353,7 +353,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#validOrderData")
         @SneakyThrows
         void update_OrderDataIsValid_ShouldReturnOkResponse(int amount, String symbol, String type) {
-            val requestBody = OrderUpdateRequestDTO.builder()
+            val orderRequestDTO = OrderUpdateRequestDTO.builder()
                     .amount(amount)
                     .symbol(symbol)
                     .build();
@@ -362,8 +362,8 @@ public class OrderControllerTest {
                     .thenReturn(
                             OrderResponseDTO.builder()
                                     .uuid(ORDER_UUID)
-                                    .amount(requestBody.amount())
-                                    .symbol(Order.Symbol.valueOf(requestBody.symbol()))
+                                    .amount(orderRequestDTO.amount())
+                                    .symbol(Order.Symbol.valueOf(orderRequestDTO.symbol()))
                                     .build()
                     );
 
@@ -386,7 +386,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#invalidAmounts")
         @SneakyThrows
         void update_OrderStockAmountIsInvalid_ShouldReturnBadRequest(int amount) {
-            val requestBody = OrderUpdateRequestDTO.builder()
+            val orderRequestDTO = OrderUpdateRequestDTO.builder()
                     .amount(amount)
                     .symbol("AAPL")
                     .build();
@@ -412,7 +412,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         @SneakyThrows
         void update_OrderSymbolIsInvalid_ShouldReturnBadRequest(String symbol) {
-            val requestBody = OrderUpdateRequestDTO.builder()
+            val orderRequestDTO = OrderUpdateRequestDTO.builder()
                     .amount(1)
                     .symbol(symbol)
                     .build();
@@ -438,7 +438,7 @@ public class OrderControllerTest {
         @MethodSource("util.OrderFlowTestDataFactory#invalidSymbolsOrTypes")
         @SneakyThrows
         void update_OrderTypeIsInvalid_ShouldReturnBadRequest(String type) {
-            val requestBody = OrderUpdateRequestDTO.builder()
+            val orderRequestDTO = OrderUpdateRequestDTO.builder()
                     .amount(1)
                     .symbol("AAPL")
                     .build();

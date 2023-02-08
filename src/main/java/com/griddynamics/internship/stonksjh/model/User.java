@@ -1,10 +1,14 @@
 package com.griddynamics.internship.stonksjh.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.MapKeyEnumerated;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -52,8 +57,11 @@ public class User {
             nullable = false,
             columnDefinition = "Decimal(10,2) default '0.00'"
     )
-    @Setter(AccessLevel.NONE)
     @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @MapKeyEnumerated(EnumType.STRING)
+    private Map<Order.Symbol, Integer> stocks;
 
 }
