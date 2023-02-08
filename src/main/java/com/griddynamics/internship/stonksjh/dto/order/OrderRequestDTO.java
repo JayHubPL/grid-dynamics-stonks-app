@@ -1,14 +1,11 @@
 package com.griddynamics.internship.stonksjh.dto.order;
 
-import java.math.BigDecimal;
-
 import lombok.Builder;
 
 @Builder
-public record OrderCreateRequestDTO(
+public record OrderRequestDTO(
         String symbol,
         int amount,
-        String type,
-        BigDecimal bid
+        String type
 ) {
 }
