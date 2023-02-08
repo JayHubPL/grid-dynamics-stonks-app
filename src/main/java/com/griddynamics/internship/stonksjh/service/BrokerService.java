@@ -86,13 +86,10 @@ public class BrokerService {
                 return thread;
             }
         });
-        scheduler.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                stockPrices = getAllStockPrices();
-                orderRepository.findAllByStatus(Order.Status.PENDING)
-                        .forEach(order -> processOrder(order));
-            }
+        scheduler.scheduleAtFixedRate(() -> {
+            stockPrices = getAllStockPrices();
+            orderRepository.findAllByStatus(Order.Status.PENDING)
+                    .forEach(this::processOrder);
         }, 0, period, TimeUnit.MINUTES);
     }
 

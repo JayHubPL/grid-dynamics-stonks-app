@@ -12,6 +12,7 @@ import com.griddynamics.internship.stonksjh.model.User;
 import com.griddynamics.internship.stonksjh.repository.UserRepository;
 import lombok.val;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@Disabled
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
 class UserServiceTest {

@@ -1,6 +1,8 @@
 package com.griddynamics.internship.stonksjh.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.val;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,7 +18,10 @@ public class AppConfig {
 
     @Bean
     public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        val objMapper = new ObjectMapper();
+        objMapper.registerModule(new JavaTimeModule());
+
+        return objMapper;
     }
 
 }
