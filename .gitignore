@@ -1,4 +1,4 @@
-token.txt
+src/main/resources/finnhub.properties
 
 ### IntelliJ IDEA ###
 .idea

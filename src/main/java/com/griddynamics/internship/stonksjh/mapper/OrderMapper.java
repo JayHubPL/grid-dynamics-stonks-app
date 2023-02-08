@@ -12,6 +12,10 @@ public interface OrderMapper {
     OrderResponseDTO entityToResponseDTO(Order entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "owner", ignore = true)
+    Order dtoToEntity(OrderResponseDTO dto);
+
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "uuid", ignore = true)
     @Mapping(target = "owner", ignore = true)
     @Mapping(target = "status", ignore = true)

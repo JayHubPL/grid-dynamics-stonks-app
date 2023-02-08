@@ -17,6 +17,7 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uuid", ignore = true)
     @Mapping(target = "balance", ignore = true)
+    @Mapping(target = "stocks", ignore = true)
     User requestDtoToEntity(UserRequestDTO userRequestDTO);
 
 }
