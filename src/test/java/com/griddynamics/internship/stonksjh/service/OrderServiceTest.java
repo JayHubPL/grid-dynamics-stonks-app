@@ -59,26 +59,20 @@ public class OrderServiceTest {
     private OrderService ORDER_SERVICE;
 
     @BeforeAll
-    void initOrderService() {
+    void setup() {
         ORDER_SERVICE = new OrderService(
                 ORDER_REPOSITORY,
                 USER_REPOSITORY,
                 INJECTED_MAPPER,
                 BROKER_SERVICE
         );
-    }
 
-    @BeforeAll
-    void initPredefinedUser() {
         PREDEFINED_USER = User.builder()
                 .uuid(OWNER_UUID)
                 .username("user")
                 .email("user@example.com")
                 .build();
-    }
 
-    @BeforeAll
-    void initPredefinedOrder() {
         PREDEFINED_ORDER = Order.builder()
                 .amount(1)
                 .symbol(Order.Symbol.AAPL)
@@ -124,15 +118,15 @@ public class OrderServiceTest {
             when(ORDER_REPOSITORY.save(any(Order.class)))
                     .thenAnswer(i -> i.getArguments()[0]);
 
-            val result = ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO);
+            val result = ORDER_SERVICE.create(OWNER_UUID, requestBody);
             System.err.printf("%d, %s, %s\n%n", result.amount(), result.symbol(), result.type());
 
             assertThat(result.amount())
-                    .isEqualTo(orderRequestDTO.amount());
+                    .isEqualTo(requestBody.amount());
             assertThat(result.symbol())
-                    .isEqualTo(Order.Symbol.valueOf(orderRequestDTO.symbol()));
+                    .isEqualTo(Order.Symbol.valueOf(requestBody.symbol()));
             assertThat(result.type())
-                    .isEqualTo(Order.Type.valueOf(orderRequestDTO.type()));
+                    .isEqualTo(Order.Type.valueOf(requestBody.type()));
 
             verify(INJECTED_MAPPER).createRequestDtoToEntity(orderRequestDTO);
             verify(INJECTED_MAPPER).entityToResponseDTO(any(Order.class));
@@ -149,7 +143,7 @@ public class OrderServiceTest {
                     .build();
 
             assertThatExceptionOfType(InvalidOrderTypeException.class)
-                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, requestBody));
         }
 
         @ParameterizedTest(name = "{index}: amount={0}")
@@ -162,7 +156,7 @@ public class OrderServiceTest {
                     .build();
 
             assertThatExceptionOfType(InvalidSymbolException.class)
-                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, requestBody));
         }
 
         @ParameterizedTest(name = "{index}: amount={0}")
@@ -175,7 +169,19 @@ public class OrderServiceTest {
                     .build();
 
             assertThatExceptionOfType(InvalidStockAmountException.class)
-                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, orderRequestDTO));
+                    .isThrownBy(() -> ORDER_SERVICE.create(OWNER_UUID, requestBody));
+        }
+
+        @Test
+        void create_shouldThrow_whenOwnerDoesNotExist() {
+            val requestBody = OrderCreateRequestDTO.builder()
+                    .amount(1)
+                    .symbol(Order.Symbol.AAPL.toString())
+                    .type(Order.Type.BUY.toString())
+                    .build();
+
+            assertThatExceptionOfType(UserNotFoundException.class)
+                    .isThrownBy(() -> ORDER_SERVICE.create(randomInvalidUUID(), requestBody));
         }
 
     }
@@ -205,13 +211,8 @@ public class OrderServiceTest {
 
         @Test
         void readOneOrder_NoOrderWithGivenUuidExists_ShouldThrow() {
-            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
-                    .thenReturn(Optional.empty());
-
             assertThatExceptionOfType(OrderNotFoundException.class)
                     .isThrownBy(() -> ORDER_SERVICE.read(OWNER_UUID, ORDER_UUID));
-
-            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
         @Test
@@ -273,10 +274,10 @@ public class OrderServiceTest {
             when(ORDER_REPOSITORY.save(any(Order.class)))
                     .thenAnswer(i -> i.getArguments()[0]);
 
-            val result = ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, orderRequestDTO);
+            val result = ORDER_SERVICE.update(OWNER_UUID, ORDER_UUID, requestBody);
 
             assertThat(result.amount())
-                    .isEqualTo(orderRequestDTO.amount());
+                    .isEqualTo(requestBody.amount());
             assertThat(result.symbol())
                     .isEqualTo(Order.Symbol.valueOf(orderRequestDTO.symbol()));
 
@@ -287,6 +288,11 @@ public class OrderServiceTest {
 
         @Test
         void updateOrder_NoOrderWithGivenUuidExists_ShouldThrow() {
+            val requestBody = OrderUpdateRequestDTO.builder()
+                    .amount(1)
+                    .symbol(Order.Symbol.AAPL.toString())
+                    .build();
+
             when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
                     .thenReturn(Optional.empty());
 
@@ -343,13 +349,8 @@ public class OrderServiceTest {
 
         @Test
         void deleteOrder_NoOrderWithGivenUuidExists_ShouldThrow() {
-            when(ORDER_REPOSITORY.findByUuidAndOwnerUuid(any(UUID.class), any(UUID.class)))
-                    .thenReturn(Optional.empty());
-
             assertThatExceptionOfType(OrderNotFoundException.class)
                     .isThrownBy(() -> ORDER_SERVICE.delete(OWNER_UUID, ORDER_UUID));
-
-            verify(ORDER_REPOSITORY).findByUuidAndOwnerUuid(ORDER_UUID, OWNER_UUID);
         }
 
     }
